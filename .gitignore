@@ -1,0 +1,59 @@
+# Unity generated
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/.utmp/
+
+# Addressables / asset pack build output
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
+/ServerData/
+
+# IDE / generated project files
+.vs/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Crash reports and builds
+sysinfo.txt
+crashlytics-build.properties
+*.apk
+*.aab
+
+# Secrets: never commit
+*.keystore
+*.jks
+*.p12
+google-services.json
+GoogleService-Info.plist
+*.env
+secrets/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

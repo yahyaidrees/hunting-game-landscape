@@ -1,0 +1,16 @@
+{
+    "name": "Game.Hunt",
+    "rootNamespace": "Game.Hunt",
+    "references": [
+        "Game.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
