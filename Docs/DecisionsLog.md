@@ -10,6 +10,8 @@ Every owner decision from section 21 of the game plan, with the date it was made
 | 2026-11-19 | — | How old assets come in | Through the staging folder `Assets/_Incoming/OldGame/`. No old scripts are copied |
 | 2026-11-19 | — | Where Phase 1 starts | Hunt-first graybox in the Meadow region. Final art comes after the hunt is fun |
 | 2026-11-19 | — | Asset delivery | Play Asset Delivery through Addressables for Android: base about 150 MB, Region 2 fast-follow, later content on-demand. Plan section 17 updated |
+| 2026-11-19 | 19★ | Meshy plan | Paid plan: private licence, no credit needed. Check the live terms on the first generation day and note the plan name in the licence log rows |
+| 2026-11-19 | — | Staging in Git | `Assets/_Incoming/` and `SourceAssets/OldGame/` stay local only (6.6 GB of old assets); only gate-passed assets are committed |
 | 2026-11-19 | — | Unity version | 6000.3.26f1 (Unity 6.3 LTS), URP 17.3. Stay on this LTS line |
 
 ## Open (defaults in use)
@@ -34,7 +36,6 @@ Every owner decision from section 21 of the game plan, with the date it was made
 | 16 | Mentor voice | Text with subtitles plus about 40 AI-voiced lines | Default |
 | 17 | AI-generated music acceptable? | Yes, from section 14 prompts | Default |
 | 18 | Which AI sound tool and image tool | Prompts stay general | Default |
-| 19★ | Meshy plan | Free plan: credited, licence checked on the day | Default |
 | 20★ | Three test phones (low, mid, high) | Owner names three; Low budget set from the weakest | Default |
 | 21 | Paid Asset Store packs as fallback | Yes, after asking each time | Default |
 | 22 | Five outside playtesters for gate B | Friends or family who have not seen the game | Default |

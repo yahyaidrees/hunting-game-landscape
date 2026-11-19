@@ -10,6 +10,15 @@
 /[Rr]ecordings/
 /.utmp/
 
+# Staging and raw copies: large and not gate-checked, so kept local only.
+# Commit an asset only after it passes the gate and moves into Assets/_Game or Assets/ThirdParty.
+/[Aa]ssets/_Incoming/**
+!/[Aa]ssets/_Incoming/OldGame/
+!/[Aa]ssets/_Incoming/OldGame/README.md
+!/[Aa]ssets/_Incoming/OldGame/README.md.meta
+/SourceAssets/OldGame/**
+!/SourceAssets/OldGame/README.md
+
 # Addressables / asset pack build output
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
