@@ -212,7 +212,8 @@ namespace Game.Editor
                 model.transform.SetParent(root.transform, false);
                 if (!model.TryGetComponent<Animator>(out var animator)) animator = model.AddComponent<Animator>();
                 animator.runtimeAnimatorController = controller;
-                animator.applyRootMotion = false;
+                animator.applyRootMotion = true;          // extracted from the pose, then dropped by the sink:
+                model.AddComponent<RootMotionSink>();     // the agent moves the wolf, the legs stay under it
                 animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
                 var anim = root.AddComponent<AnimalAnimator>();
                 SetRefs(anim, ("animator", animator), ("brain", brain));
