@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79381b5cfb1e7df4495bb63351a201bb, type: 3}
+  m_Name: Behaviour_Wolf
+  m_EditorClassIdentifier: Game.Animals::Game.Animals.AnimalBehaviourSettings
+  displayName: Wolf
+  walkSpeed: 1.4
+  fleeSpeed: 9
+  roamRadius: 16
+  roamPause: {x: 3, y: 8}
+  feedSeconds: 25
+  fleeDistance: 80
+  hearingMultiplier: 1.2
+  hearingRate: 0.9
+  smellRange: 45
+  scentHalfAngle: 25
+  smellRate: 1.5
+  sightRange: 55
+  fieldOfView: 220
+  sightRate: 1.2
+  stillVisibility: 0.1
+  crouchVisibility: 0.45
+  eyeHeight: 0.7
+  alertThreshold: 0.35
+  suspicionDecay: 0.12
+  alertListenSeconds: 6
+  panicDistance: 6

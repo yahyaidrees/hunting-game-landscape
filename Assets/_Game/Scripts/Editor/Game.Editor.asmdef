@@ -6,6 +6,8 @@
         "Game.Player",
         "Game.UI",
         "Game.Tracking",
+        "Game.Animals",
+        "Unity.AI.Navigation",
         "Unity.InputSystem",
         "UnityEngine.UI",
         "Unity.RenderPipelines.Universal.Runtime",

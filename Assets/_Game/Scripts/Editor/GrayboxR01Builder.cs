@@ -62,11 +62,12 @@ namespace Game.Editor
             EnsureDecalFeature("Assets/Settings/Mobile_Renderer.asset", log);
             EnsureDecalFeature("Assets/Settings/PC_Renderer.asset", log);
             var tracking = EnsureTrackingAssets(log);
+            var animals = EnsureAnimalAssets(log);
             AssetDatabase.SaveAssets();
 
             var player = BuildPlayerPrefab(motor, noise, log);
             var hud = BuildHudPrefab(log);
-            BuildScene(scene, player, hud, surfaces, decalMats, tracking, log);
+            BuildScene(scene, player, hud, surfaces, decalMats, tracking, animals, log);
             AssetDatabase.SaveAssets();
             return log.ToString();
         }
@@ -344,12 +345,13 @@ namespace Game.Editor
 
                 // Top left: developer readout (editor and development builds only).
                 var dev = NewText("DevOverlay", safe, font, "", 24, Color.white, TextAnchor.UpperLeft);
-                Anchor(dev.rectTransform, new Vector2(0f, 1f), new Vector2(250f, -250f), new Vector2(460f, 180f));
+                Anchor(dev.rectTransform, new Vector2(0f, 1f), new Vector2(290f, -275f), new Vector2(540f, 230f));
                 dev.gameObject.AddComponent<Shadow>();
                 var overlay = dev.gameObject.AddComponent<DevOverlay>();
                 SetRefs(overlay, ("text", dev));
 
                 AddTrackingHud(safe, font, knob, parchment, forest);
+                AddWindHud(safe, font, parchment, forest);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, HudPrefab);
                 log.AppendLine("saved " + HudPrefab);
@@ -415,7 +417,7 @@ namespace Game.Editor
 
         static void BuildScene(UnityEngine.SceneManagement.Scene scene, GameObject playerPrefab, GameObject hudPrefab,
                                Dictionary<SurfaceKind, SurfaceDefinition> surfaces, Dictionary<SurfaceKind, Material> decalMats,
-                               TrackingAssets tracking, StringBuilder log)
+                               TrackingAssets tracking, AnimalAssets animals, StringBuilder log)
         {
             Physics.SyncTransforms();   // ground raycasts in edit mode
 
@@ -468,6 +470,7 @@ namespace Game.Editor
 
             Physics.SyncTransforms();
             BuildTrackingScene(root.transform, spawn, rot, tracking, log);
+            BuildAnimalScene(root.transform, spawn, rot, animals, log);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

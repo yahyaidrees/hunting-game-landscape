@@ -5,6 +5,7 @@
         "Game.Core",
         "Game.Player",
         "Game.Tracking",
+        "Game.Animals",
         "UnityEngine.UI"
     ],
     "includePlatforms": [],

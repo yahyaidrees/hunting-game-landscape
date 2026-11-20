@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d12e77f60622b494a91656bdf7bcaefa, type: 3}
+  m_Name: WindSettings_R01
+  m_EditorClassIdentifier: Game.Core::Game.Core.Wind.WindSettings
+  baseDirection: 135
+  baseStrength: 0.5
+  directionWander: 30
+  strengthWander: 0.25
+  wanderPeriodSeconds: 90

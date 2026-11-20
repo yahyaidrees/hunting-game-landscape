@@ -12,6 +12,7 @@ namespace Game.UI
 
         FirstPersonController controller;
         PlayerNoise noise;
+        Game.Animals.AnimalBrain animal;
         float timer, frames;
 
         void Awake()
@@ -36,7 +37,12 @@ namespace Game.UI
             string speed = controller ? (controller.SpeedFraction * 100f).ToString("0") + "%" : "-";
             string posture = controller && controller.IsCrouched ? "crouched" : "standing";
             string level = noise ? noise.Level.ToString("0.00") + " (" + noise.HearingRadius.ToString("0") + " m)" : "-";
-            text.text = $"{fps:0} fps\nground: {surface}\nspeed: {speed} {posture}\nnoise: {level}";
+            if (!animal) animal = FindFirstObjectByType<Game.Animals.AnimalBrain>();
+            string wolf = animal && animal.isActiveAndEnabled
+                ? $"\nwolf: {animal.State}, {animal.Senses.DistanceToHunter:0} m, suspicion {animal.Senses.Suspicion:0.00}" +
+                  $"\n  hears {animal.Senses.Hearing:0.0} smells {animal.Senses.Smell:0.0} sees {animal.Senses.Sight:0.0}"
+                : "\nwolf: gone";
+            text.text = $"{fps:0} fps\nground: {surface}\nspeed: {speed} {posture}\nnoise: {level}{wolf}";
         }
     }
 }

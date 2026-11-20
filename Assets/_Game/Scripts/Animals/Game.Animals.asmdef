@@ -2,7 +2,8 @@
     "name": "Game.Animals",
     "rootNamespace": "Game.Animals",
     "references": [
-        "Game.Core"
+        "Game.Core",
+        "Game.Player"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
