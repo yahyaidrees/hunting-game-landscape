@@ -51,7 +51,7 @@ Shader "SavannaEnv/CloudBand"
             {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                half alpha : TEXCOORD1;
+                float alpha : TEXCOORD1;     // float: half varyings arrived as garbage on scattered pixels (black specks with HDR)
                 float3 dir : TEXCOORD2;      // eye-relative direction
             };
 

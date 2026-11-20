@@ -54,7 +54,7 @@ Shader "FarmEnv/DistantMountains"
             {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                half4 color : COLOR;            // rgb = lit + hazed colour, a = haze amount
+                float4 color : TEXCOORD2;       // rgb = lit + hazed colour, a = haze amount (float: half varyings arrived as garbage)
                 float3 dir : TEXCOORD1;         // eye-relative direction; the night sky is looked up per pixel (EnvNight.cginc)
             };
 

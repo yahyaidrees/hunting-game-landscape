@@ -42,7 +42,7 @@ Shader "SavannaEnv/Particle"
             struct Varyings
             {
                 float4 pos : SV_POSITION;
-                half4 color : COLOR;
+                float4 color : TEXCOORD1;    // float: half varyings arrived as garbage on scattered pixels
                 float2 uv : TEXCOORD0;
             };
 

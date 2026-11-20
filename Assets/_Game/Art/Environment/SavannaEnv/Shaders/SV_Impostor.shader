@@ -86,7 +86,7 @@ Shader "SavannaEnv/Impostor"
             {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                half3 tint : TEXCOORD1;
+                float3 tint : TEXCOORD1;     // float: half varyings arrived as garbage on scattered pixels
                 float3 wpos : TEXCOORD2;
             };
 

@@ -107,9 +107,9 @@ Shader "SavannaEnv/Baked"
             {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                half3 tint : TEXCOORD1;
+                float3 tint : TEXCOORD1;     // all varyings float: half varyings arrived as garbage on scattered pixels
                 float3 wpos : TEXCOORD2;
-                half cutoff : TEXCOORD3;
+                float cutoff : TEXCOORD3;
             };
 
             Varyings vert (Attributes v)
@@ -165,7 +165,7 @@ Shader "SavannaEnv/Baked"
             {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                half cutoff : TEXCOORD1;
+                float cutoff : TEXCOORD1;
             };
 
             Varyings vert (Attributes v)

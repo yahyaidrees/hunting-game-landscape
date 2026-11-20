@@ -68,8 +68,8 @@ Shader "SavannaEnv/Ground"
                 float4 uvA : TEXCOORD0;      // splat, shadow
                 float4 uvB : TEXCOORD1;      // sand, green
                 float4 uvC : TEXCOORD2;      // dry, far
-                half3 sun : TEXCOORD3;
-                half3 amb : TEXCOORD4;
+                float3 sun : TEXCOORD3;      // float: half varyings arrived as garbage on scattered pixels
+                float3 amb : TEXCOORD4;
                 float3 wpos : TEXCOORD5;
             };
 
