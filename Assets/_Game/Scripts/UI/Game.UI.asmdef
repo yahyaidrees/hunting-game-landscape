@@ -6,6 +6,7 @@
         "Game.Player",
         "Game.Tracking",
         "Game.Animals",
+        "Game.Weapons",
         "UnityEngine.UI"
     ],
     "includePlatforms": [],

@@ -11,7 +11,7 @@ namespace Game.Player
     [DefaultExecutionOrder(-50)]
     public sealed class PlayerInputReader : MonoBehaviour
     {
-        InputAction moveAction, lookAction, crouchAction;
+        InputAction moveAction, lookAction, crouchAction, fireAction, scopeAction, breathAction, reloadAction;
 
         /// <summary>Move direction, length 0..1 (how far the stick is pushed).</summary>
         public Vector2 Move { get; private set; }
@@ -20,6 +20,20 @@ namespace Game.Player
         /// <summary>Stick-style look, -1..1 per axis (gamepad right stick, arrow keys).</summary>
         public Vector2 LookStick { get; private set; }
         public bool CrouchPressed { get; private set; }
+        public bool FirePressed { get; private set; }
+        public bool ScopePressed { get; private set; }
+        public bool BreathHeld { get; private set; }
+        public bool ReloadPressed { get; private set; }
+
+        // Editor keys: F fire, E scope, Left Shift hold breath, R reload. On-screen buttons drive the gamepad controls.
+        static InputAction Button(string name, string key, string pad)
+        {
+            var a = new InputAction(name, InputActionType.Button);
+            a.AddBinding(key);
+            a.AddBinding(pad);
+            a.Enable();
+            return a;
+        }
 
         void OnEnable()
         {
@@ -42,16 +56,20 @@ namespace Game.Player
             moveAction.Enable();
             lookAction.Enable();
             crouchAction.Enable();
+
+            fireAction = Button("Fire", "<Keyboard>/f", "<Gamepad>/rightTrigger");
+            scopeAction = Button("Scope", "<Keyboard>/e", "<Gamepad>/leftTrigger");
+            breathAction = Button("HoldBreath", "<Keyboard>/leftShift", "<Gamepad>/rightShoulder");
+            reloadAction = Button("Reload", "<Keyboard>/r", "<Gamepad>/buttonWest");
         }
 
         void OnDisable()
         {
-            moveAction?.Dispose();
-            lookAction?.Dispose();
-            crouchAction?.Dispose();
-            moveAction = lookAction = crouchAction = null;
+            foreach (var a in new[] { moveAction, lookAction, crouchAction, fireAction, scopeAction, breathAction, reloadAction })
+                a?.Dispose();
+            moveAction = lookAction = crouchAction = fireAction = scopeAction = breathAction = reloadAction = null;
             Move = LookDrag = LookStick = Vector2.zero;
-            CrouchPressed = false;
+            CrouchPressed = FirePressed = ScopePressed = BreathHeld = ReloadPressed = false;
         }
 
         void Update()
@@ -60,6 +78,10 @@ namespace Game.Player
             LookStick = Vector2.ClampMagnitude(lookAction.ReadValue<Vector2>(), 1f);
             LookDrag = TouchLookArea.ConsumeDelta();
             CrouchPressed = crouchAction.WasPressedThisFrame();
+            FirePressed = fireAction.WasPressedThisFrame();
+            ScopePressed = scopeAction.WasPressedThisFrame();
+            BreathHeld = breathAction.IsPressed();
+            ReloadPressed = reloadAction.WasPressedThisFrame();
         }
     }
 }

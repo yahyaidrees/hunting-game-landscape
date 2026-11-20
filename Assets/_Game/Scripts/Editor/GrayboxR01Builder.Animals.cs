@@ -25,7 +25,7 @@ namespace Game.Editor
             public GameObject wolfPrefab;
         }
 
-        static AnimalAssets EnsureAnimalAssets(StringBuilder log)
+        static AnimalAssets EnsureAnimalAssets(Material blood, StringBuilder log)
         {
             foreach (var f in new[] { AnimalsDataDir, WorldDataDir, "Assets/_Game/Prefabs/Animals" }) EnsureFolder(f);
             var a = new AnimalAssets
@@ -34,12 +34,12 @@ namespace Game.Editor
                 wolf = EnsureAsset<AnimalBehaviourSettings>(AnimalsDataDir + "/Behaviour_Wolf.asset", log),
             };
             var mat = LitMaterial("GB_WolfPlaceholder", new Color(0.42f, 0.40f, 0.37f), log);
-            a.wolfPrefab = BuildWolfPrefab(a.wolf, mat, log);
+            a.wolfPrefab = BuildWolfPrefab(a.wolf, mat, blood, log);
             return a;
         }
 
         // Grey stand-in at wolf size (about 0.8 m at the shoulder, 1.4 m long) until the real wolf is through the pipeline.
-        static GameObject BuildWolfPrefab(AnimalBehaviourSettings behaviour, Material mat, StringBuilder log)
+        static GameObject BuildWolfPrefab(AnimalBehaviourSettings behaviour, Material mat, Material blood, StringBuilder log)
         {
             var root = new GameObject("Wolf_Placeholder");
             try
@@ -68,6 +68,7 @@ namespace Game.Editor
                 Primitive(PrimitiveType.Cylinder, visual, "Tail", new Vector3(0f, 0.55f, -0.62f), Quaternion.Euler(-50f, 0f, 0f), new Vector3(0.07f, 0.22f, 0.07f), mat);
                 foreach (var (x, z) in new[] { (-0.12f, 0.35f), (0.12f, 0.35f), (-0.12f, -0.35f), (0.12f, -0.35f) })
                     Primitive(PrimitiveType.Cylinder, visual, "Leg", new Vector3(x, 0.2f, z), Quaternion.identity, new Vector3(0.07f, 0.2f, 0.07f), mat);
+                AddWolfCombat(root, behaviour, visual, blood);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, WolfPrefabPath);
                 log.AppendLine("saved " + WolfPrefabPath);

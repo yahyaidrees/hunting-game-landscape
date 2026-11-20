@@ -62,11 +62,12 @@ namespace Game.Editor
             EnsureDecalFeature("Assets/Settings/Mobile_Renderer.asset", log);
             EnsureDecalFeature("Assets/Settings/PC_Renderer.asset", log);
             var tracking = EnsureTrackingAssets(log);
-            var animals = EnsureAnimalAssets(log);
+            var weapons = EnsureWeaponAssets(log);
+            var animals = EnsureAnimalAssets(weapons.blood, log);
             AssetDatabase.SaveAssets();
 
-            var player = BuildPlayerPrefab(motor, noise, log);
-            var hud = BuildHudPrefab(log);
+            var player = BuildPlayerPrefab(motor, noise, weapons, log);
+            var hud = BuildHudPrefab(weapons, log);
             BuildScene(scene, player, hud, surfaces, decalMats, tracking, animals, log);
             AssetDatabase.SaveAssets();
             return log.ToString();
@@ -224,7 +225,7 @@ namespace Game.Editor
 
         // ---------- player ----------
 
-        static GameObject BuildPlayerPrefab(PlayerMotorSettings motor, PlayerNoiseSettings noise, StringBuilder log)
+        static GameObject BuildPlayerPrefab(PlayerMotorSettings motor, PlayerNoiseSettings noise, WeaponAssets weapons, StringBuilder log)
         {
             var root = new GameObject("Player");
             try
@@ -259,6 +260,7 @@ namespace Game.Editor
                 SetRefs(playerNoise, ("controller", controller), ("settings", noise));
                 var interactor = root.AddComponent<Game.Tracking.ClueInteractor>();
                 SetRefs(interactor, ("viewCamera", cam));
+                AddWeaponToPlayer(root, pivot, cam, weapons);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefab);
                 log.AppendLine("saved " + PlayerPrefab);
@@ -269,7 +271,7 @@ namespace Game.Editor
 
         // ---------- HUD ----------
 
-        static GameObject BuildHudPrefab(StringBuilder log)
+        static GameObject BuildHudPrefab(WeaponAssets weapons, StringBuilder log)
         {
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var knob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
@@ -316,7 +318,7 @@ namespace Game.Editor
 
                 // Bottom right: crouch (fire, scope and the rest arrive with shooting).
                 var crouch = NewRect("CrouchButton", safe);
-                Anchor(crouch, new Vector2(1f, 0f), new Vector2(-210f, 210f), new Vector2(160f, 160f));
+                Anchor(crouch, new Vector2(1f, 0f), new Vector2(-330f, 430f), new Vector2(130f, 130f));   // above fire, as in the plan's HUD
                 var cImg = crouch.gameObject.AddComponent<Image>();
                 cImg.sprite = knob; cImg.color = new Color(forest.r, forest.g, forest.b, 0.8f);
                 var button = crouch.gameObject.AddComponent<OnScreenButton>();
@@ -352,6 +354,7 @@ namespace Game.Editor
 
                 AddTrackingHud(safe, font, knob, parchment, forest);
                 AddWindHud(safe, font, parchment, forest);
+                AddWeaponHud((RectTransform)root.transform, safe, font, knob, weapons.scopeMask, parchment, forest);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, HudPrefab);
                 log.AppendLine("saved " + HudPrefab);

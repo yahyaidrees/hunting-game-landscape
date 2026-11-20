@@ -49,6 +49,22 @@ namespace Game.Player
         public SurfaceDefinition CurrentSurface { get; private set; }
         public event Action<FootstepInfo> Footstep;
 
+        /// <summary>Extra view rotation in degrees (x yaw, y pitch up) on top of where the hunter looks: weapon sway and recoil.</summary>
+        public Vector2 AimOffset { get; set; }
+        /// <summary>Look sensitivity multiplier (the weapon lowers it while zoomed in through the scope).</summary>
+        public float LookScale { get; set; } = 1f;
+        /// <summary>Raised when an animal knocks the hunter down (direction it came from).</summary>
+        public event Action<Vector3> Attacked;
+
+        /// <summary>Pushes the hunter (an animal's charge) and raises Attacked.</summary>
+        public void TakeHit(Vector3 from, float force)
+        {
+            Vector3 push = transform.position - from;
+            push.y = 0f;
+            planarVelocity += push.normalized * force;
+            Attacked?.Invoke(from);
+        }
+
         void Awake()
         {
             body = GetComponent<CharacterController>();
@@ -72,11 +88,11 @@ namespace Game.Player
         void UpdateLook(float dt)
         {
             float perPixel = settings.dragDegreesPerScreenHeight / Mathf.Max(1, Screen.height);
-            Vector2 delta = input.LookDrag * perPixel + input.LookStick * (settings.stickDegreesPerSecond * dt);
+            Vector2 delta = (input.LookDrag * perPixel + input.LookStick * (settings.stickDegreesPerSecond * dt)) * LookScale;
             yaw += delta.x;
             pitch = Mathf.Clamp(pitch - delta.y, settings.minPitch, settings.maxPitch);
             transform.rotation = Quaternion.Euler(0f, yaw, 0f);
-            cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+            cameraPivot.localRotation = Quaternion.Euler(pitch - AimOffset.y, AimOffset.x, 0f);
         }
 
         void UpdateCrouch(float dt)

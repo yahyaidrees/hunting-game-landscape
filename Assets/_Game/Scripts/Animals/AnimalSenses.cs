@@ -35,6 +35,20 @@ namespace Game.Animals
         public float Smell { get; private set; }
         public float Sight { get; private set; }
         public float DistanceToHunter { get; private set; }
+        /// <summary>Raised when a loud noise (a gunshot) reaches it: the source position.</summary>
+        public event System.Action<Vector3> HeardLoudNoise;
+
+        void OnEnable() => Game.Core.Noise.NoiseEvents.Emitted += OnLoudNoise;
+        void OnDisable() => Game.Core.Noise.NoiseEvents.Emitted -= OnLoudNoise;
+
+        void OnLoudNoise(Vector3 position, float radius, Game.Core.Noise.NoiseKind kind)
+        {
+            if ((position - transform.position).sqrMagnitude > radius * radius) return;
+            Suspicion = 1f;
+            LastStimulus = Stimulus.Sound;
+            LastStimulusPosition = position;
+            HeardLoudNoise?.Invoke(position);
+        }
 
         void Update()
         {

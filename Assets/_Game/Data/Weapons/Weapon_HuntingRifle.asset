@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b350cb00749e75a4b873a8bad4b80fff, type: 3}
+  m_Name: Weapon_HuntingRifle
+  m_EditorClassIdentifier: Game.Weapons::Game.Weapons.WeaponDefinition
+  displayName: Hunting rifle
+  magazineSize: 5
+  cycleSeconds: 1.1
+  reloadSeconds: 2.6
+  muzzleVelocity: 820
+  maxRange: 400
+  damageMultiplier: 1
+  hipFieldOfView: 60
+  scopeFieldOfView: 15
+  scopeInSeconds: 0.2
+  scopeSwayDegrees: 0.55
+  hipSwayDegrees: 1.5
+  swaySpeed: 0.45
+  movementSwayMultiplier: 2.5
+  crouchSwayMultiplier: 0.7
+  holdBreathSwayMultiplier: 0.15
+  holdBreathSeconds: 4
+  breathRecoverSeconds: 3
+  recoilDegrees: 5
+  shotHeardRadius: 250

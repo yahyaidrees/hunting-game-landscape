@@ -53,5 +53,25 @@ namespace Game.Animals
         public float alertListenSeconds = 6f;
         [Tooltip("Closer than this, it notices the hunter whatever the senses say.")]
         public float panicDistance = 6f;
+
+        [Header("Health and wounds")]
+        public float maxHealth = 100f;
+        [Tooltip("Damage of a body (gut, haunch) hit. A second body hit usually kills.")]
+        public float bodyDamage = 60f;
+        public float legDamage = 35f;
+        [Tooltip("A leg wound multiplies its speed by this (it limps).")]
+        [Range(0.2f, 1f)] public float legWoundSpeed = 0.6f;
+        [Tooltip("How far a wounded animal runs before it lies down to rest.")]
+        public float woundedFleeDistance = 45f;
+        [Tooltip("Health regained per second while resting. Fully recovered, it gets up and escapes.")]
+        public float recoverPerSecond = 0.6f;
+
+        [Header("Charge (wounded and cornered)")]
+        [Tooltip("A resting wounded animal charges a hunter who comes this close.")]
+        public float chargeDistance = 9f;
+        public float chargeSpeed = 11f;
+        [Tooltip("Push given to the hunter when the charge connects.")]
+        public float chargeKnockback = 7f;
+        public float chargeGiveUpSeconds = 6f;
     }
 }

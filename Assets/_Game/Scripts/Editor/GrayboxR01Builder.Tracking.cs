@@ -265,7 +265,7 @@ namespace Game.Editor
 
             // Right side, above crouch: Inspect (lantern amber: the main action while tracking).
             var inspect = NewRect("Inspect", safe);
-            Anchor(inspect, new Vector2(1f, 0f), new Vector2(-210f, 400f), new Vector2(230f, 92f));
+            Anchor(inspect, new Vector2(1f, 0f), new Vector2(-620f, 320f), new Vector2(230f, 92f));
             var inspectVisual = NewRect("Button", inspect);
             Fill(inspectVisual, Vector2.zero, Vector2.zero);
             var inspImg = inspectVisual.gameObject.AddComponent<Image>();
