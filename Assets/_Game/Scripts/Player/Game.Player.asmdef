@@ -2,7 +2,9 @@
     "name": "Game.Player",
     "rootNamespace": "Game.Player",
     "references": [
-        "Game.Core"
+        "Game.Core",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
