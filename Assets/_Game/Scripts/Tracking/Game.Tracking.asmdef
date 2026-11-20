@@ -2,7 +2,10 @@
     "name": "Game.Tracking",
     "rootNamespace": "Game.Tracking",
     "references": [
-        "Game.Core"
+        "Game.Core",
+        "Game.Player",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

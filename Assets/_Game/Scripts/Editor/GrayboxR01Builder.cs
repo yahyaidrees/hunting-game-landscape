@@ -21,7 +21,7 @@ namespace Game.Editor
     /// Scenes/Graybox/R01_Meadow_Graybox (a copy of the Alpine Meadow environment). Safe to run again: data assets
     /// keep their tuned values, prefabs and the generated scene objects are rebuilt.
     /// </summary>
-    public static class GrayboxR01Builder
+    public static partial class GrayboxR01Builder
     {
         const string Data = "Assets/_Game/Data";
         const string SurfacesDir = Data + "/Surfaces";
@@ -42,6 +42,7 @@ namespace Game.Editor
             (SurfaceKind.Rock,         new Vector2( 8f,  3f), new Vector2(6f, 6f)),
             (SurfaceKind.Mud,          new Vector2(-6f, -7f), new Vector2(6f, 5f)),
             (SurfaceKind.ShallowWater, new Vector2( 6f, -7f), new Vector2(6f, 4f)),
+            (SurfaceKind.Rock,         new Vector2(-16f, 12f), new Vector2(5f, 5f)),   // breaks the wolf trail: no prints
         };
 
         [MenuItem("Game/Graybox/Build R01 Meadow Graybox")]
@@ -51,17 +52,21 @@ namespace Game.Editor
         {
             var log = new StringBuilder();
             EnsureFolders();
+            // Open the scene first: opening a scene unloads assets nothing references yet, which would turn the
+            // asset handles created below into dead references (they were saved as empty fields).
+            var scene = OpenOrCreateScene(log);
             var surfaces = EnsureSurfaces(log);
             var motor = EnsureAsset<PlayerMotorSettings>(PlayerDataDir + "/PlayerMotorSettings.asset", log);
             var noise = EnsureAsset<PlayerNoiseSettings>(PlayerDataDir + "/PlayerNoiseSettings.asset", log);
             var decalMats = EnsureDecalMaterials(surfaces, log);
             EnsureDecalFeature("Assets/Settings/Mobile_Renderer.asset", log);
             EnsureDecalFeature("Assets/Settings/PC_Renderer.asset", log);
+            var tracking = EnsureTrackingAssets(log);
             AssetDatabase.SaveAssets();
 
             var player = BuildPlayerPrefab(motor, noise, log);
             var hud = BuildHudPrefab(log);
-            BuildScene(player, hud, surfaces, decalMats, log);
+            BuildScene(scene, player, hud, surfaces, decalMats, tracking, log);
             AssetDatabase.SaveAssets();
             return log.ToString();
         }
@@ -251,6 +256,8 @@ namespace Game.Editor
                 SetRefs(controller, ("settings", motor), ("input", reader), ("cameraPivot", pivot.transform));
                 var playerNoise = root.AddComponent<PlayerNoise>();
                 SetRefs(playerNoise, ("controller", controller), ("settings", noise));
+                var interactor = root.AddComponent<Game.Tracking.ClueInteractor>();
+                SetRefs(interactor, ("viewCamera", cam));
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefab);
                 log.AppendLine("saved " + PlayerPrefab);
@@ -337,10 +344,12 @@ namespace Game.Editor
 
                 // Top left: developer readout (editor and development builds only).
                 var dev = NewText("DevOverlay", safe, font, "", 24, Color.white, TextAnchor.UpperLeft);
-                Anchor(dev.rectTransform, new Vector2(0f, 1f), new Vector2(250f, -110f), new Vector2(460f, 180f));
+                Anchor(dev.rectTransform, new Vector2(0f, 1f), new Vector2(250f, -250f), new Vector2(460f, 180f));
                 dev.gameObject.AddComponent<Shadow>();
                 var overlay = dev.gameObject.AddComponent<DevOverlay>();
                 SetRefs(overlay, ("text", dev));
+
+                AddTrackingHud(safe, font, knob, parchment, forest);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, HudPrefab);
                 log.AppendLine("saved " + HudPrefab);
@@ -394,15 +403,20 @@ namespace Game.Editor
 
         // ---------- scene ----------
 
-        static void BuildScene(GameObject playerPrefab, GameObject hudPrefab, Dictionary<SurfaceKind, SurfaceDefinition> surfaces,
-                               Dictionary<SurfaceKind, Material> decalMats, StringBuilder log)
+        static UnityEngine.SceneManagement.Scene OpenOrCreateScene(StringBuilder log)
         {
             if (!File.Exists(ScenePath))
             {
                 if (!AssetDatabase.CopyAsset(SourceScene, ScenePath)) throw new System.Exception("could not copy " + SourceScene);
                 log.AppendLine("copied " + SourceScene + " -> " + ScenePath);
             }
-            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            return EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+        }
+
+        static void BuildScene(UnityEngine.SceneManagement.Scene scene, GameObject playerPrefab, GameObject hudPrefab,
+                               Dictionary<SurfaceKind, SurfaceDefinition> surfaces, Dictionary<SurfaceKind, Material> decalMats,
+                               TrackingAssets tracking, StringBuilder log)
+        {
             Physics.SyncTransforms();   // ground raycasts in edit mode
 
             // Spawn where the old test player stood (first build) or where our player stands (rebuild).
@@ -451,6 +465,9 @@ namespace Game.Editor
                     projector.drawDistance = 200f;
                 }
             }
+
+            Physics.SyncTransforms();
+            BuildTrackingScene(root.transform, spawn, rot, tracking, log);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

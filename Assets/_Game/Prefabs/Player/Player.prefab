@@ -150,6 +150,7 @@ GameObject:
   - component: {fileID: 4076900708855984533}
   - component: {fileID: 1837507815127588661}
   - component: {fileID: 5214942381780224112}
+  - component: {fileID: 3489651325247315726}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -239,3 +240,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.Player::Game.Player.PlayerNoise
   controller: {fileID: 1837507815127588661}
   settings: {fileID: 11400000, guid: a7f594c8c38009a4fad040c9dacb0f51, type: 2}
+--- !u!114 &3489651325247315726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7115372657890288103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969fa2e8a35a3b046a09c3c4e90114ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Tracking::Game.Tracking.ClueInteractor
+  viewCamera: {fileID: 7313426091726567196}

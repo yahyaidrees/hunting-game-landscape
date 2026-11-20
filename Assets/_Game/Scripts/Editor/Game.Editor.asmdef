@@ -5,6 +5,7 @@
         "Game.Core",
         "Game.Player",
         "Game.UI",
+        "Game.Tracking",
         "Unity.InputSystem",
         "UnityEngine.UI",
         "Unity.RenderPipelines.Universal.Runtime",
