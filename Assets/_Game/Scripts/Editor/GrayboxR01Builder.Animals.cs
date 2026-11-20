@@ -34,7 +34,9 @@ namespace Game.Editor
                 wolf = EnsureAsset<AnimalBehaviourSettings>(AnimalsDataDir + "/Behaviour_Wolf.asset", log),
             };
             var mat = LitMaterial("GB_WolfPlaceholder", new Color(0.42f, 0.40f, 0.37f), log);
-            a.wolfPrefab = BuildWolfPrefab(a.wolf, mat, blood, log);
+            a.wolfPrefab = BuildWolfPrefab(a.wolf, mat, blood, log);              // grey placeholder, kept as a fallback
+            var real = EnsureRealWolf(a.wolf, blood, log);
+            if (real) a.wolfPrefab = real;
             return a;
         }
 

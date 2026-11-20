@@ -34,7 +34,7 @@ namespace Game.Animals
         [SerializeField] AnimalBehaviourSettings settings;
         [SerializeField] AnimalSenses senses;
         [SerializeField] AnimalHealth health;
-        [Tooltip("Visual root, tipped over when it dies.")]
+        [Tooltip("Placeholder only: visual root tipped over when it dies. Leave empty when an AnimalAnimator plays a death.")]
         [SerializeField] Transform visual;
         [SerializeField] AnimalState startState = AnimalState.Feed;
 
@@ -51,6 +51,8 @@ namespace Game.Animals
         /// <summary>True once it has healed from a wound while resting (the hunter was too slow).</summary>
         public bool Recovered { get; private set; }
         public event Action<AnimalState> StateChanged;
+        /// <summary>Raised when its charge reaches the hunter.</summary>
+        public event Action Attacked;
         public static event Action<AnimalBrain, AnimalState> AnyStateChanged;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -120,6 +122,7 @@ namespace Game.Animals
                     if (HunterDistance() < 1.6f)
                     {
                         hunter.TakeHit(transform.position, settings.chargeKnockback);
+                        Attacked?.Invoke();
                         Enter(AnimalState.WoundedFlee);
                     }
                     else if (Time.time > stateUntil) Enter(AnimalState.WoundedFlee);
