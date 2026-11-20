@@ -12,6 +12,7 @@ Every owner decision from section 21 of the game plan, with the date it was made
 | 2026-11-19 | — | Asset delivery | Play Asset Delivery through Addressables for Android: base about 150 MB, Region 2 fast-follow, later content on-demand. Plan section 17 updated |
 | 2026-11-19 | 19★ | Meshy plan | Paid plan: private licence, no credit needed. Check the live terms on the first generation day and note the plan name in the licence log rows |
 | 2026-11-19 | — | Staging in Git | `Assets/_Incoming/` and `SourceAssets/OldGame/` stay local only (6.6 GB of old assets); only gate-passed assets are committed |
+| 2026-11-20 | — | Old environments (Alpine, Savanna, Snow) | Accepted as the starting base after the URP port, though they don't match the Built-in look. They'll be expanded (farm elements, more ground as the player walks) or replaced later if needed. Likely cause of the look difference: this project is Linear colour space, while the old art was baked for the old project's (probably Gamma) colour space. Regrade the materials when the look is worked on |
 | 2026-11-19 | — | Unity version | 6000.3.26f1 (Unity 6.3 LTS), URP 17.3. Stay on this LTS line |
 
 ## Open (defaults in use)
