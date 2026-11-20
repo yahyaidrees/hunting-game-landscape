@@ -1,1 +1,2 @@
 name,author,source_link,licence,date_added,changes_made,project_path
+"Hunting Environments: Alpine, Savanna, Snow (+ FarmEnv shaders/scripts)","Owner (made for the previous game)","C:\Work Place\Projects Assets\HuntingEnvironments_Alpine_Snow_Savanna.unitypackage","Owner's own work - confirm no third-party textures inside","2026-11-20","9 shaders ported Built-in to URP; FarmScatterRenderer moved to RenderPipelineManager.beginCameraRendering","Assets/_Game/Art/Environment/ ; Assets/_Game/Scenes/Environments/"
