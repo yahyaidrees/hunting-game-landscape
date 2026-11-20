@@ -7,6 +7,7 @@
         "Game.UI",
         "Game.Tracking",
         "Game.Animals",
+        "Game.Environment",
         "Unity.AI.Navigation",
         "Unity.InputSystem",
         "UnityEngine.UI",

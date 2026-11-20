@@ -470,7 +470,8 @@ namespace Game.Editor
 
             Physics.SyncTransforms();
             BuildTrackingScene(root.transform, spawn, rot, tracking, log);
-            BuildAnimalScene(root.transform, spawn, rot, animals, log);
+            BakeScatterCover(root.transform, spawn + rot * new Vector3(-12f, 0f, 14f), EnsureCoverRules(surfaces, log), log);
+            BuildAnimalScene(root.transform, spawn, rot, animals, log);   // after cover: the navigation mesh avoids it
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -481,10 +482,15 @@ namespace Game.Editor
             EditorBuildSettings.scenes = list.ToArray();
         }
 
+        // The lowest solid hit below the point: the ground, not the top of a tree-trunk or rock collider.
         static Vector3 GroundPoint(Vector3 p)
         {
             var origin = new Vector3(p.x, p.y + 200f, p.z);
-            return Physics.Raycast(origin, Vector3.down, out var hit, 500f, ~0, QueryTriggerInteraction.Ignore) ? hit.point : p;
+            var hits = Physics.RaycastAll(origin, Vector3.down, 500f, ~0, QueryTriggerInteraction.Ignore);
+            if (hits.Length == 0) return p;
+            var lowest = hits[0];
+            foreach (var h in hits) if (h.point.y < lowest.point.y) lowest = h;
+            return lowest.point;
         }
     }
 }

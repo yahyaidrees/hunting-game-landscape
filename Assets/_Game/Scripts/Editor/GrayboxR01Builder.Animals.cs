@@ -110,6 +110,7 @@ namespace Game.Editor
             surface.size = new Vector3(200f, 80f, 200f);
             surface.center = Vector3.zero;
             surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+            surface.layerMask = ~(1 << ConcealmentLayer);   // bushes are walk-through cover, not obstacles
             surface.BuildNavMesh();
             if (AssetDatabase.LoadAssetAtPath<NavMeshData>(NavMeshPath)) AssetDatabase.DeleteAsset(NavMeshPath);
             AssetDatabase.CreateAsset(surface.navMeshData, NavMeshPath);

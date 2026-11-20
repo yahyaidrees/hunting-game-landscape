@@ -1,3 +1,4 @@
+using Game.Core.Cover;
 using Game.Core.Wind;
 using Game.Player;
 using UnityEngine;
@@ -22,7 +23,7 @@ namespace Game.Animals
     {
         [SerializeField] AnimalBehaviourSettings settings;
 
-        readonly RaycastHit[] hits = new RaycastHit[8];
+        readonly RaycastHit[] hits = new RaycastHit[16];
         FirstPersonController hunter;
         PlayerNoise noise;
 
@@ -93,22 +94,33 @@ namespace Game.Animals
             float dist = dir.magnitude;
             if (dist >= settings.sightRange) return 0f;
             if (Vector3.Angle(transform.forward, dir) > settings.fieldOfView * 0.5f) return 0f;
-            if (Blocked(eye, dir / dist, dist)) return 0f;
-            float visibility = Mathf.Lerp(settings.stillVisibility, 1f, hunter.SpeedFraction);
+            float cover = LineOfSight(eye, dir / dist, dist);
+            if (cover <= 0f) return 0f;
+            float visibility = Mathf.Lerp(settings.stillVisibility, 1f, hunter.SpeedFraction) * cover;
             if (hunter.IsCrouched) visibility *= settings.crouchVisibility;
             return settings.sightRate * visibility * (1f - dist / settings.sightRange);
         }
 
-        bool Blocked(Vector3 from, Vector3 dir, float dist)
+        /// <summary>
+        /// 0 when solid cover (ground, rock, trunk) blocks the view; otherwise the product of every concealing layer
+        /// (bush, young fir) the line passes through, 1 in the open.
+        /// </summary>
+        float LineOfSight(Vector3 from, Vector3 dir, float dist)
         {
-            int n = Physics.RaycastNonAlloc(from, dir, hits, dist - 0.3f, ~0, QueryTriggerInteraction.Ignore);
+            int n = Physics.RaycastNonAlloc(from, dir, hits, dist - 0.3f, ~0, QueryTriggerInteraction.Collide);
+            float visibility = 1f;
             for (int i = 0; i < n; i++)
             {
                 var c = hits[i].collider;
                 if (c is CharacterController || c.transform.IsChildOf(transform)) continue;
-                return true;
+                if (c.isTrigger)
+                {
+                    if (c.TryGetComponent(out Concealment soft)) visibility *= soft.visibility;
+                    continue;
+                }
+                return 0f;
             }
-            return false;
+            return visibility;
         }
 
         /// <summary>Clears suspicion (for example when the animal comes back later).</summary>
