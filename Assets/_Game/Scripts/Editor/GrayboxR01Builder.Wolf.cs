@@ -24,7 +24,58 @@ namespace Game.Editor
         const string WolfAnimDir = "Assets/_Game/Animation/DogFamily/Wolf";
         const string WolfControllerPath = "Assets/_Game/Animation/Controllers/Wolf.controller";
         const string RealWolfPrefabPath = "Assets/_Game/Prefabs/Animals/Wolf.prefab";
-        const string WolfMotionNode = "CG";
+        const string WolfRootBone = "CG";
+        const string WolfInPlaceDir = WolfAnimDir + "/InPlace";
+
+        /// <summary>
+        /// Copies a clip into an in-place .anim: the root bone's steady travel over the clip is subtracted, its small
+        /// surge within each step stays. Unity's own root motion could not be used: this rig's root bone sits under a
+        /// rotated parent, and with root motion on the body turned sideways and dropped to the ground; with it off the
+        /// body walked 1 m ahead of the wolf and snapped back every loop. Returns the clip's ground speed (m/s).
+        /// The .anim is updated in place on rebuilds, so its GUID (and every reference to it) stays.
+        /// </summary>
+        static AnimationClip MakeInPlace(AnimationClip source, bool loop, out float speed)
+        {
+            string path = $"{WolfInPlaceDir}/{source.name}.anim";
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+            bool created = !clip;
+            if (created) clip = new AnimationClip { name = source.name };
+            clip.ClearCurves();
+            clip.frameRate = source.frameRate;
+
+            float length = Mathf.Max(1e-4f, source.length);
+            var travel = Vector2.zero;
+            foreach (var b in AnimationUtility.GetCurveBindings(source))
+            {
+                if (b.path.Length == 0) continue;   // RootT/RootQ: avatar root curves, not needed without root motion
+                var curve = AnimationUtility.GetEditorCurve(source, b);
+                if (b.path == WolfRootBone && (b.propertyName == "m_LocalPosition.x" || b.propertyName == "m_LocalPosition.z") && curve.length > 1)
+                {
+                    float delta = curve.keys[curve.length - 1].value - curve.keys[0].value;
+                    if (Mathf.Abs(delta) > 0.02f)
+                    {
+                        if (b.propertyName.EndsWith("x")) travel.x = delta; else travel.y = delta;
+                        float slope = delta / length;
+                        var keys = curve.keys;
+                        for (int k = 0; k < keys.Length; k++)
+                        {
+                            keys[k].value -= slope * keys[k].time;
+                            keys[k].inTangent -= slope;
+                            keys[k].outTangent -= slope;
+                        }
+                        curve.keys = keys;
+                    }
+                }
+                AnimationUtility.SetEditorCurve(clip, b, curve);
+            }
+            var settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.loopTime = loop;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+            if (created) AssetDatabase.CreateAsset(clip, path);
+            else EditorUtility.SetDirty(clip);
+            speed = travel.magnitude / length;
+            return clip;
+        }
 
         // file (under Animations v2), looping
         static readonly (string file, bool loop)[] WolfClips =
@@ -45,7 +96,7 @@ namespace Game.Editor
             if (!File.Exists(srcModel)) { log.AppendLine("real wolf: source model not in staging, using the placeholder"); return null; }
             foreach (var f in new[] { WolfArt + "/Model", WolfArt + "/Textures", WolfArt + "/Materials", WolfAnimDir, "Assets/_Game/Animation/Controllers" }) EnsureFolder(f);
 
-            // model: Generic rig, root bone CG carries the motion, no materials or animation from the file
+            // model: Generic rig without root motion (clips are made in place), no materials or animation from the file
             string model = WolfArt + "/Model/Wolf_Realistic.fbx";
             if (!File.Exists(model)) { AssetDatabase.CopyAsset(srcModel, model); log.AppendLine("copied " + model); }
             var mi = (ModelImporter)AssetImporter.GetAtPath(model);
@@ -53,7 +104,7 @@ namespace Game.Editor
             mi.importAnimation = false;
             mi.animationType = ModelImporterAnimationType.Generic;
             mi.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-            mi.motionNodeName = WolfMotionNode;
+            mi.motionNodeName = "";   // no root motion (see MakeInPlace)
             mi.SaveAndReimport();
             var avatar = AssetDatabase.LoadAllAssetsAtPath(model).OfType<Avatar>().FirstOrDefault();
 
@@ -88,8 +139,10 @@ namespace Game.Editor
             var mouth = Mat("M_Wolf_Mouth", m => { m.SetTexture("_BaseMap", Texture2D.whiteTexture); m.SetColor("_BaseColor", new Color(0.42f, 0.2f, 0.2f)); m.SetFloat("_Smoothness", 0.4f); });
             var whiskers = Mat("M_Wolf_Whiskers", m => { m.SetTexture("_BaseMap", Texture2D.whiteTexture); m.SetColor("_BaseColor", new Color(0.75f, 0.73f, 0.7f)); m.SetFloat("_Cull", 0f); });
 
-            // animations: copied clips, root motion extracted from CG (the agent moves the wolf), loop flags set
+            // animations: copied clips turned into in-place clips (the agent moves the wolf), loop flags set
+            EnsureFolder(WolfInPlaceDir);
             var clips = new Dictionary<string, AnimationClip>();
+            var speeds = new Dictionary<string, float>();
             foreach (var (file, loop) in WolfClips)
             {
                 string name = Path.GetFileName(file);
@@ -103,26 +156,27 @@ namespace Game.Editor
                 ai.animationType = ModelImporterAnimationType.Generic;
                 ai.avatarSetup = ModelImporterAvatarSetup.CopyFromOther;
                 ai.sourceAvatar = avatar;
-                ai.motionNodeName = WolfMotionNode;
+                ai.motionNodeName = "";   // no root motion: the raw root-bone curves are read and made in-place below
                 ai.importAnimation = true;
                 var defs = ai.defaultClipAnimations;
                 foreach (var c in defs)
                 {
                     c.name = name;
                     c.loopTime = loop;
-                    c.lockRootRotation = true;      // turns stay in the pose; the agent turns the wolf
-                    c.lockRootHeightY = true;       // vertical motion stays in the pose
-                    c.lockRootPositionXZ = false;   // forward motion extracted (and not applied): feet stay under the agent
-                    c.keepOriginalPositionY = true;
+                    c.lockRootRotation = false;
+                    c.lockRootHeightY = false;
+                    c.lockRootPositionXZ = false;
                 }
                 ai.clipAnimations = defs;
                 ai.SaveAndReimport();
                 var clip = AssetDatabase.LoadAllAssetsAtPath(dst).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview"));
-                if (clip) clips[name] = clip;
+                if (!clip) continue;
+                clips[name] = MakeInPlace(clip, loop, out float speed);
+                speeds[name] = speed;
             }
-            log.AppendLine($"real wolf: {clips.Count} animation clips");
+            log.AppendLine($"real wolf: {clips.Count} animation clips (in place)");
 
-            var controller = BuildWolfController(clips, log);
+            var controller = BuildWolfController(clips, speeds, log);
             return BuildRealWolfPrefab(model, controller, behaviour, blood, body, fur, claws, eyes, mouth, whiskers, log);
         }
 
@@ -147,17 +201,27 @@ namespace Game.Editor
 
         static float RunClipSpeed = 8.5f;   // ground speed of the run clip, measured while building the controller
 
-        static AnimatorController BuildWolfController(Dictionary<string, AnimationClip> clips, StringBuilder log)
+        static AnimatorController BuildWolfController(Dictionary<string, AnimationClip> clips, Dictionary<string, float> speeds, StringBuilder log)
         {
-            if (File.Exists(WolfControllerPath)) AssetDatabase.DeleteAsset(WolfControllerPath);   // rebuilt from the clips each time
-            var ctrl = AnimatorController.CreateAnimatorControllerAtPath(WolfControllerPath);
+            // Rebuilt from the clips each time, but in place: deleting and re-creating it reuses the same GUID while
+            // loaded prefabs and scenes keep pointing at the destroyed object, so the wolf's Animator read as empty.
+            var ctrl = AssetDatabase.LoadAssetAtPath<AnimatorController>(WolfControllerPath);
+            if (ctrl)
+            {
+                var old = ctrl.layers[0].stateMachine;
+                foreach (var s in old.states) old.RemoveState(s.state);
+                foreach (var sub in AssetDatabase.LoadAllAssetsAtPath(WolfControllerPath).OfType<BlendTree>())
+                    Object.DestroyImmediate(sub, true);
+                foreach (var p in ctrl.parameters) ctrl.RemoveParameter(p);
+            }
+            else ctrl = AnimatorController.CreateAnimatorControllerAtPath(WolfControllerPath);
             ctrl.AddParameter("Speed", AnimatorControllerParameterType.Float);
             // playback rate of the locomotion sets: above the run clip's own ground speed the legs cycle faster (no gallop clip)
             ctrl.AddParameter(new AnimatorControllerParameter { name = AnimalAnimator.MoveScaleParam, type = AnimatorControllerParameterType.Float, defaultFloat = 1f });
             var sm = ctrl.layers[0].stateMachine;
             AnimationClip C(string n) => clips.TryGetValue(n, out var c) ? c : null;
             // blend thresholds from each clip's real ground speed, so the feet match the agent's speed
-            float Spd(string n, float fallback) { var c = C(n); float s = c ? c.averageSpeed.magnitude : 0f; return s > 0.2f ? s : fallback; }
+            float Spd(string n, float fallback) => speeds.TryGetValue(n, out float s) && s > 0.2f ? s : fallback;
 
             var loco = ctrl.CreateBlendTreeInController(AnimalAnimator.Locomotion, out var tree, 0);
             tree.blendParameter = "Speed";
@@ -212,8 +276,7 @@ namespace Game.Editor
                 model.transform.SetParent(root.transform, false);
                 if (!model.TryGetComponent<Animator>(out var animator)) animator = model.AddComponent<Animator>();
                 animator.runtimeAnimatorController = controller;
-                animator.applyRootMotion = true;          // extracted from the pose, then dropped by the sink:
-                model.AddComponent<RootMotionSink>();     // the agent moves the wolf, the legs stay under it
+                animator.applyRootMotion = false;   // in-place clips; the agent moves the wolf
                 animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
                 var anim = root.AddComponent<AnimalAnimator>();
                 SetRefs(anim, ("animator", animator), ("brain", brain));

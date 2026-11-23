@@ -26,6 +26,7 @@ namespace Game.Tracking
                 var p = go.AddComponent<DecalProjector>();
                 p.drawDistance = drawDistance;
                 p.fadeScale = 0.85f;
+                p.startAngleFade = 50f; p.endAngleFade = 75f;   // ground only, not animals or trunks
                 items[i] = p;
             }
         }

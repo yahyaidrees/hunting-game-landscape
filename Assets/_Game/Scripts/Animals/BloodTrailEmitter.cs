@@ -74,7 +74,7 @@ namespace Game.Animals
             var d = pool[next];
             next = (next + 1) % pool.Length;
             d.transform.SetPositionAndRotation(ground.point, Quaternion.LookRotation(-ground.normal, Random.onUnitSphere));
-            d.size = new Vector3(dropSize.x * scale, dropSize.y * scale, 0.4f);
+            d.size = new Vector3(dropSize.x * scale, dropSize.y * scale, 0.25f);
             d.gameObject.SetActive(true);
         }
 
@@ -91,6 +91,7 @@ namespace Game.Animals
                 p.material = dropMaterial;
                 p.pivot = Vector3.zero;
                 p.drawDistance = 45f;
+                p.startAngleFade = 50f; p.endAngleFade = 75f;   // ground only: not up the animal's legs, rocks or trunks
                 pool[i] = p;
             }
         }

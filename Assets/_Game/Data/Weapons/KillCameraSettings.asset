@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86b08b45ad0e1e844b491b953c6556a0, type: 3}
+  m_Name: KillCameraSettings
+  m_EditorClassIdentifier: Game.Weapons::Game.Weapons.KillCameraSettings
+  playOnCleanKills: 1
+  minDistance: 15
+  flightTimeScale: 0.02
+  bulletScreenSpeed: 24
+  flightSeconds: {x: 1.2, y: 2.4}
+  followFieldOfView: 42
+  followOffset: {x: 0.1, y: 0.05, z: -0.42}
+  trailLength: 1.6
+  cutDistance: 3
+  impactCameraDistance: 2.6
+  impactFieldOfView: 34
+  afterImpactSeconds: 2.4
+  afterImpactTimeScale: 0.2
+  pushIn: 0.18
+  shakeDegrees: 1.4
+  shakeSeconds: 0.45
+  skipDelay: 0.35

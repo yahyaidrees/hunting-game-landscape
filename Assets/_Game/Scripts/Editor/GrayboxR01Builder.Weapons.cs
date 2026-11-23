@@ -25,9 +25,24 @@ namespace Game.Editor
         public sealed class WeaponAssets
         {
             public WeaponDefinition rifle;
-            public Material blood, wood, metal;
+            public Material blood, wood, metal, bullet, bulletTrail;
             public Sprite scopeMask;
             public int layer;
+            public KillCameraSettings killCamera;
+        }
+
+        // Air trail behind the kill-camera bullet: unlit, vertex colour and alpha (Sprites/Default draws in URP).
+        static Material EnsureTrailMaterial(StringBuilder log)
+        {
+            const string dir = "Assets/_Game/Art/VFX";
+            EnsureFolder(dir);
+            string path = dir + "/M_BulletTrail.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat) return mat;
+            mat = new Material(Shader.Find("Sprites/Default")) { name = "M_BulletTrail" };
+            AssetDatabase.CreateAsset(mat, path);
+            log.AppendLine("created " + path);
+            return mat;
         }
 
         static WeaponAssets EnsureWeaponAssets(StringBuilder log)
@@ -39,16 +54,19 @@ namespace Game.Editor
                 wood = LitMaterial("GB_RifleWood", new Color(0.36f, 0.22f, 0.12f), log),
                 metal = LitMaterial("GB_RifleMetal", new Color(0.16f, 0.16f, 0.17f), log),
                 layer = EnsureLayer(WeaponLayerName, log),
+                bullet = LitMaterial("GB_BulletCopper", new Color(0.72f, 0.42f, 0.22f), log),
+                bulletTrail = EnsureTrailMaterial(log),
+                killCamera = EnsureAsset<KillCameraSettings>(WeaponsDataDir + "/KillCameraSettings.asset", log),
             };
             var source = AssetDatabase.LoadAssetAtPath<Material>(UrpDecalMat);
             string bloodTex = BloodDir + "/Blood_Drops.png";
-            if (!File.Exists(bloodTex)) { File.WriteAllBytes(bloodTex, MakeBloodDrops()); ImportDecalTexture(bloodTex); }
+            // generated textures are rewritten when their generator changes (same file, so the GUID and references stay)
+            if (WriteIfChanged(bloodTex, MakeBloodDrops())) ImportDecalTexture(bloodTex);
             w.blood = DecalMaterialFromTexture("M_BloodDrops", bloodTex, source, 4, log);
 
             string maskPath = UiSpriteDir + "/UI_ScopeMask.png";
-            if (!File.Exists(maskPath))
+            if (WriteIfChanged(maskPath, MakeScopeMask()))
             {
-                File.WriteAllBytes(maskPath, MakeScopeMask());
                 AssetDatabase.ImportAsset(maskPath);
                 var imp = (TextureImporter)AssetImporter.GetAtPath(maskPath);
                 imp.textureType = TextureImporterType.Sprite;
@@ -99,6 +117,17 @@ namespace Game.Editor
             return mat;
         }
 
+        // Shader-style smoothstep: 0 at edge0, 1 at edge1 (either order). Mathf.SmoothStep(a, b, t) instead blends
+        // from a to b, which left the drops' background at 60% alpha (a visible square) and greyed the scope view.
+        static bool WriteIfChanged(string path, byte[] bytes)
+        {
+            if (File.Exists(path) && File.ReadAllBytes(path).SequenceEqual(bytes)) return false;
+            File.WriteAllBytes(path, bytes);
+            return true;
+        }
+
+        static float SmoothEdge(float edge0, float edge1, float x) => Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(edge0, edge1, x));
+
         // A few dark drops and a smear, kept small and muted (plan: light blood, never gore).
         static byte[] MakeBloodDrops()
         {
@@ -113,7 +142,7 @@ namespace Game.Editor
                 foreach (var d in drops)
                 {
                     float dist = Mathf.Sqrt((u - d.x) * (u - d.x) + (v - d.y) * (v - d.y)) / d.r;
-                    a = Mathf.Max(a, Mathf.SmoothStep(1f, 0.7f, dist));
+                    a = Mathf.Max(a, SmoothEdge(1f, 0.7f, dist));
                 }
                 px[y * n + x] = new Color(0.26f, 0.05f, 0.04f, a * 0.85f);
             }
@@ -130,13 +159,13 @@ namespace Game.Editor
             {
                 float u = (x + 0.5f) / n - 0.5f, v = (y + 0.5f) / n - 0.5f;
                 float r = Mathf.Sqrt(u * u + v * v);
-                float outside = Mathf.SmoothStep(0.47f, 0.49f, r);
+                float outside = SmoothEdge(0.47f, 0.49f, r);
                 float ax = Mathf.Abs(u), ay = Mathf.Abs(v);
                 float thick = 3.5f / n, thin = 0.9f / n;
                 bool postH = ay < thick && ax > 0.17f, postV = ax < thick && ay > 0.17f;
                 bool fineH = ay < thin && ax <= 0.17f, fineV = ax < thin && ay <= 0.17f;
                 float line = (postH || postV) ? 1f : (fineH || fineV) ? 0.9f : 0f;
-                float edgeShade = Mathf.SmoothStep(0.38f, 0.47f, r) * 0.35f;   // soft darkening toward the rim
+                float edgeShade = SmoothEdge(0.38f, 0.47f, r) * 0.35f;   // soft darkening toward the rim
                 px[y * n + x] = new Color(0f, 0f, 0f, Mathf.Clamp01(Mathf.Max(outside, Mathf.Max(line, edgeShade))));
             }
             return Png(px, n);
@@ -184,7 +213,62 @@ namespace Game.Editor
 
             var weapon = root.AddComponent<WeaponController>();
             SetRefs(weapon, ("weapon", w.rifle), ("controller", root.GetComponent<FirstPersonController>()),
-                ("input", root.GetComponent<PlayerInputReader>()), ("viewCamera", cam), ("weaponModel", rifle));
+                ("input", root.GetComponent<PlayerInputReader>()), ("viewCamera", cam), ("weaponModel", rifle),
+                ("killCamera", AddKillCamera(root, cam, weapon, w)));
+        }
+
+        // Slow-motion kill camera rig: its own camera (sees the world, not the first-person rifle), a bullet and its air trail.
+        static KillCamera AddKillCamera(GameObject root, Camera playerCam, WeaponController weapon, WeaponAssets w)
+        {
+            var rig = new GameObject("KillCamera");
+            rig.transform.SetParent(root.transform, false);
+
+            var camGo = new GameObject("ShotCamera");
+            camGo.transform.SetParent(rig.transform, false);
+            var shotCam = camGo.AddComponent<Camera>();
+            shotCam.enabled = false;
+            shotCam.cullingMask = playerCam.cullingMask;
+            shotCam.nearClipPlane = 0.03f;
+            shotCam.farClipPlane = playerCam.farClipPlane;
+            shotCam.fieldOfView = 42f;
+            var shotData = camGo.AddComponent<UniversalAdditionalCameraData>();
+            var playerData = playerCam.GetUniversalAdditionalCameraData();
+            shotData.renderPostProcessing = playerData.renderPostProcessing;
+            shotData.antialiasing = playerData.antialiasing;
+            shotData.renderShadows = true;
+
+            // a rifle bullet drawn about 2.5 times life size so it reads on a phone screen
+            var bullet = new GameObject("Bullet").transform;
+            bullet.SetParent(rig.transform, false);
+            Primitive(PrimitiveType.Capsule, bullet, "Body", Vector3.zero, Quaternion.Euler(90f, 0f, 0f), new Vector3(0.02f, 0.035f, 0.02f), w.bullet);
+            foreach (var r in bullet.GetComponentsInChildren<MeshRenderer>()) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            var trailGo = new GameObject("BulletTrail");
+            trailGo.transform.SetParent(rig.transform, false);
+            var trail = trailGo.AddComponent<LineRenderer>();
+            trail.sharedMaterial = w.bulletTrail;
+            trail.useWorldSpace = true;
+            trail.positionCount = 8;
+            trail.widthCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(1f, 0.009f));
+            trail.colorGradient = new Gradient
+            {
+                colorKeys = new[] { new GradientColorKey(new Color(0.85f, 0.85f, 0.8f), 0f), new GradientColorKey(Color.white, 1f) },
+                alphaKeys = new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(0.3f, 1f) },
+            };
+            trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            trail.receiveShadows = false;
+            trail.numCapVertices = 2;
+
+            var kill = rig.AddComponent<KillCamera>();
+            SetRefs(kill, ("settings", w.killCamera), ("shotCamera", shotCam), ("playerCamera", playerCam),
+                ("input", root.GetComponent<PlayerInputReader>()), ("bullet", bullet), ("trail", trail));
+            var so = new SerializedObject(kill);
+            var pause = so.FindProperty("pauseWhilePlaying");
+            var paused = new Behaviour[] { root.GetComponent<FirstPersonController>(), weapon };
+            pause.arraySize = paused.Length;
+            for (int i = 0; i < paused.Length; i++) pause.GetArrayElementAtIndex(i).objectReferenceValue = paused[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return kill;
         }
 
         // ---------- wolf: hit zones, health, blood ----------

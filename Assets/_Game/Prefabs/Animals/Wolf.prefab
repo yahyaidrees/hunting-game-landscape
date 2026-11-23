@@ -436,7 +436,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.Animals::Game.Animals.AnimalAnimator
   animator: {fileID: 8578812884367637699}
   brain: {fileID: 5100511464347318687}
-  runClipSpeed: 5.6257844
+  runClipSpeed: 5.6249995
   maxPlaybackScale: 1.7
   crossFadeSeconds: 0.25
   hitSeconds: 0.45
@@ -1138,6 +1138,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 8f4b963a6371c944ca273ac827045485, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 61803a0f1f9426b47bd934d07cb4abe1, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6733770864477433318, guid: 61803a0f1f9426b47bd934d07cb4abe1, type: 3}
       propertyPath: m_CastShadows
       value: 0
@@ -1205,10 +1209,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -5150119089963763828, guid: 61803a0f1f9426b47bd934d07cb4abe1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5404073092748332913}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 61803a0f1f9426b47bd934d07cb4abe1, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8767633193401448602}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 61803a0f1f9426b47bd934d07cb4abe1, type: 3}
 --- !u!4 &571252111951024608 stripped
 Transform:
@@ -1235,23 +1236,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 61803a0f1f9426b47bd934d07cb4abe1, type: 3}
   m_PrefabInstance: {fileID: 2766482805927330130}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &3073122517260139523 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 61803a0f1f9426b47bd934d07cb4abe1, type: 3}
-  m_PrefabInstance: {fileID: 2766482805927330130}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &8767633193401448602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3073122517260139523}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3fd2c4ebadee6845965417ba885d6e9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Game.Animals::Game.Animals.RootMotionSink
 --- !u!4 &3081866954683344923 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 909860023539870025, guid: 61803a0f1f9426b47bd934d07cb4abe1, type: 3}

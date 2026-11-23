@@ -468,6 +468,7 @@ namespace Game.Editor
                     projector.size = new Vector3(p.size.x, p.size.y, 4f);
                     projector.pivot = new Vector3(0f, 0f, 2f);
                     projector.drawDistance = 200f;
+                    projector.startAngleFade = 50f; projector.endAngleFade = 75f;   // ground only, not animals or trunks
                 }
             }
 

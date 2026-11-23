@@ -42,8 +42,11 @@ namespace Game.Weapons
         [SerializeField] Transform weaponModel;
         [SerializeField] Vector3 hipPosition = new Vector3(0.22f, -0.2f, 0.45f);
         [SerializeField] Vector3 aimPosition = new Vector3(0f, -0.12f, 0.3f);
+        [Tooltip("Optional: plays clean heart-and-lung kills in slow motion; the hit lands when its bullet arrives.")]
+        [SerializeField] KillCamera killCamera;
 
         readonly RaycastHit[] hits = new RaycastHit[16];
+        readonly System.Collections.Generic.List<Vector3> path = new System.Collections.Generic.List<Vector3>();
         bool scopeWanted;
         float scopeAmount, nextShotTime, reloadDoneTime = -1f, breathLeft, recoverUntil, recoil, exertion;
 
@@ -148,6 +151,8 @@ namespace Game.Weapons
             const float step = 0.01f;   // seconds per segment
             Vector3 pos = origin, vel = direction * weapon.muzzleVelocity;
             float travelled = 0f;
+            path.Clear();
+            path.Add(origin);
             while (travelled < weapon.maxRange)
             {
                 Vector3 next = pos + vel * step;
@@ -161,12 +166,16 @@ namespace Game.Weapons
                     var c = hits[i].collider;
                     if (c is CharacterController) continue;
                     if (c.TryGetComponent(out Hitbox box) && box.Owner != null)
+                    {
+                        path.Add(hits[i].point);
                         return HitAnimal(box, hits[i].point, seg / len, travelled + hits[i].distance, origin, direction);
+                    }
                     if (c.isTrigger) continue;   // bushes and other soft cover do not stop the bullet
                     return new ShotResult(true, false, HitZone.Body, hits[i].point, travelled + hits[i].distance, DropAt(hits[i].point, origin, direction));
                 }
                 travelled += len;
                 pos = next;
+                path.Add(pos);
             }
             return new ShotResult(false, false, HitZone.Body, pos, travelled, DropAt(pos, origin, direction));
         }
@@ -179,7 +188,11 @@ namespace Game.Weapons
             int n = Physics.RaycastNonAlloc(point - dir * 0.05f, dir, hits, 1.5f, ~0, QueryTriggerInteraction.Collide);
             for (int i = 0; i < n; i++)
                 if (hits[i].collider.TryGetComponent(out Hitbox b) && b.Owner == owner && b.zone > best) best = b.zone;
-            owner.ReceiveHit(new HitInfo(best, point, dir, distance, weapon.damageMultiplier));
+            var info = new HitInfo(best, point, dir, distance, weapon.damageMultiplier);
+            // a clean kill plays in slow motion first; the hit lands when the kill camera's bullet arrives
+            bool deferred = best == HitZone.Vital && killCamera
+                && killCamera.TryPlay(path, first.transform, first.transform.InverseTransformPoint(point), distance, () => owner.ReceiveHit(info));
+            if (!deferred) owner.ReceiveHit(info);
             return new ShotResult(true, true, best, point, distance, DropAt(point, origin, aim));
         }
 

@@ -418,13 +418,14 @@ namespace Game.Editor
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            go.transform.localPosition = new Vector3(0f, 0.25f, 0f);   // low box: a wolf lying on the patch stays clean
             go.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             var p = go.AddComponent<DecalProjector>();
             p.material = mat;
-            p.size = new Vector3(size.x, size.y, 2f);
-            p.pivot = new Vector3(0f, 0f, 1f);
+            p.size = new Vector3(size.x, size.y, 1.5f);
+            p.pivot = new Vector3(0f, 0f, 0.75f);
             p.drawDistance = 80f;
+            p.startAngleFade = 50f; p.endAngleFade = 75f;   // ground only, not animals or trunks
             return p;
         }
 

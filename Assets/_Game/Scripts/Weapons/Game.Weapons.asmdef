@@ -3,7 +3,8 @@
     "rootNamespace": "Game.Weapons",
     "references": [
         "Game.Core",
-        "Game.Player"
+        "Game.Player",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

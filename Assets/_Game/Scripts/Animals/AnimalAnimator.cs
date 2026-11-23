@@ -40,8 +40,7 @@ namespace Game.Animals
             brain.StateChanged += OnState;
             brain.Attacked += OnAttack;
             if (health) health.Hit += OnHit;
-            // the navigation agent moves the animal; a RootMotionSink next to the Animator drops the clips' own travel
-            if (!animator.TryGetComponent<RootMotionSink>(out _)) animator.gameObject.AddComponent<RootMotionSink>();
+            animator.applyRootMotion = false;   // in-place clips: the navigation agent moves the animal
         }
 
         void OnDestroy()
