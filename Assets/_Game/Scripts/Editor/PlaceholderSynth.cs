@@ -251,14 +251,16 @@ namespace Game.Editor
         }
 
         /// <summary>16-bit mono PCM .wav.</summary>
-        public static byte[] Wav(float[] x)
+        public static byte[] Wav(float[] x) => Wav(x, Rate);
+
+        public static byte[] Wav(float[] x, int rate)
         {
             using var ms = new MemoryStream();
             using var w = new BinaryWriter(ms);
             int bytes = x.Length * 2;
             w.Write(new[] { 'R', 'I', 'F', 'F' }); w.Write(36 + bytes); w.Write(new[] { 'W', 'A', 'V', 'E' });
             w.Write(new[] { 'f', 'm', 't', ' ' }); w.Write(16); w.Write((short)1); w.Write((short)1);
-            w.Write(Rate); w.Write(Rate * 2); w.Write((short)2); w.Write((short)16);
+            w.Write(rate); w.Write(rate * 2); w.Write((short)2); w.Write((short)16);
             w.Write(new[] { 'd', 'a', 't', 'a' }); w.Write(bytes);
             foreach (float v in x) w.Write((short)Mathf.Clamp(Mathf.RoundToInt(v * 32767f), -32768, 32767));
             w.Flush();

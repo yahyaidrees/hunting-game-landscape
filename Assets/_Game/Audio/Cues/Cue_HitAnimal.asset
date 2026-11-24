@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Cue_HitAnimal
   m_EditorClassIdentifier: Game.Core::Game.Core.Audio.SoundCue
   clips:
-  - {fileID: 8300000, guid: 49a5a51944919cc4db86a20fc4896033, type: 3}
+  - {fileID: 8300000, guid: a700f1c7027dec843bedbde7efc64dff, type: 3}
   output: {fileID: -2258232050777704729, guid: 29e58f7a2caca4a4fa87db884eae60ff, type: 2}
   category: 0
   volume: 1
@@ -24,4 +24,4 @@ MonoBehaviour:
   maxDistance: 150
   priority: 10
   loop: 0
-  placeholderFor: WPN-15 hit on animal (old game sound for now)
+  placeholderFor: Old game sound. WPN-15 (dull thud, not wet) can replace it.

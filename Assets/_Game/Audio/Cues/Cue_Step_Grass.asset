@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Cue_Step_Grass
   m_EditorClassIdentifier: Game.Core::Game.Core.Audio.SoundCue
   clips:
-  - {fileID: 8300000, guid: b2de5e133c94ede44b4ee3d3f013e7fa, type: 3}
-  - {fileID: 8300000, guid: 9fcaebb65c6400844b612fd3c790f48d, type: 3}
-  - {fileID: 8300000, guid: fb5fb904ffc75da4481e58051387038e, type: 3}
-  - {fileID: 8300000, guid: 9050da8445222b140817a9183ab61c8d, type: 3}
+  - {fileID: 8300000, guid: 89d84722e842ddf4c88d2bd1a857cc6f, type: 3}
+  - {fileID: 8300000, guid: 92e7063cd7231bd4aa448acbf2ef85be, type: 3}
+  - {fileID: 8300000, guid: 6bd9ecb1718057242952f6f32dd67719, type: 3}
+  - {fileID: 8300000, guid: 5fecb5e2280c94f48bd6a23873f2d38e, type: 3}
   output: {fileID: -5442649412307844985, guid: 29e58f7a2caca4a4fa87db884eae60ff, type: 2}
   category: 0
   volume: 0.55
@@ -27,4 +27,4 @@ MonoBehaviour:
   maxDistance: 60
   priority: 128
   loop: 0
-  placeholderFor: PLY-01 footsteps, Grass
+  placeholderFor: Old game walk/run cut into single steps. PLY-01 can replace them.

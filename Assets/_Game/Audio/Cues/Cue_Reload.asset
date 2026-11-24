@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Cue_Reload
   m_EditorClassIdentifier: Game.Core::Game.Core.Audio.SoundCue
   clips:
-  - {fileID: 8300000, guid: 3f545b9d333d56b4482cdd40b6dc1382, type: 3}
+  - {fileID: 8300000, guid: bd8935e0b02c92442ae05e519a7877eb, type: 3}
   output: {fileID: -2258232050777704729, guid: 29e58f7a2caca4a4fa87db884eae60ff, type: 2}
   category: 0
   volume: 0.7
@@ -24,4 +24,4 @@ MonoBehaviour:
   maxDistance: 60
   priority: 128
   loop: 0
-  placeholderFor: WPN-05 rifle reload
+  placeholderFor: Old game sound. WPN-05 can replace it.

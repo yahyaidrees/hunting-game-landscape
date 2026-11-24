@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: Cue_RifleShot
   m_EditorClassIdentifier: Game.Core::Game.Core.Audio.SoundCue
   clips:
-  - {fileID: 8300000, guid: a07eec307d040fc41b4d7642b6cdf221, type: 3}
-  - {fileID: 8300000, guid: 9176154da94f5cd4989b9eb494462e89, type: 3}
-  - {fileID: 8300000, guid: 6f9258f832beeb74eb6ab90999ceaf47, type: 3}
+  - {fileID: 8300000, guid: 62dd8766f303a0a4292c75483eeb9b49, type: 3}
   output: {fileID: -2258232050777704729, guid: 29e58f7a2caca4a4fa87db884eae60ff, type: 2}
   category: 0
   volume: 1
@@ -26,4 +24,4 @@ MonoBehaviour:
   maxDistance: 60
   priority: 0
   loop: 0
-  placeholderFor: WPN-01 hunting rifle shot + WPN-02 echo, open land
+  placeholderFor: Old game sound. WPN-01 shot + WPN-02 echo can replace it.

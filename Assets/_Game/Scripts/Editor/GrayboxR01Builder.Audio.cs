@@ -63,6 +63,17 @@ namespace Game.Editor
             var bark = Old(wolfSrc + "Wolf Bark.wav", "Animals/Wolf/WOLF_Bark_01.wav", true);
             var barkDouble = Old(wolfSrc + "Wolf Bark Double.wav", "Animals/Wolf/WOLF_BarkDouble_01.wav", true);
             var whine = Old(wolfSrc + "Whining.wav", "Animals/Wolf/WOLF_Whine_01.wav", true);
+            var rifleShot = Old("Audio/Weapons/Sniper_Shoot.wav", "Weapons/SFX_RifleShot_01.wav", false);
+            var reloadClip = Old("Audio/Weapons/Akready.wav", "Weapons/SFX_Reload_01.wav", false);
+            var fleshHit = Old("Audio/Weapons/bullet_impact_body_flesh_07.wav", "Weapons/SFX_HitAnimal_01.wav", true);
+            // the old walk and run sounds hold two steps each: cut into single steps, levelled
+            var grassSteps = new[]
+            {
+                CutOldClip("Audio/Player/playerWalkSound.mp3", "Player/FS_Grass_Walk_01.wav", 0.04f, 0.52f, log),
+                CutOldClip("Audio/Player/playerWalkSound.mp3", "Player/FS_Grass_Walk_02.wav", 0.56f, 1.04f, log),
+                CutOldClip("Audio/Player/playerRunSound.mp3", "Player/FS_Grass_Run_01.wav", 0.07f, 0.47f, log),
+                CutOldClip("Audio/Player/playerRunSound.mp3", "Player/FS_Grass_Run_02.wav", 0.48f, 0.97f, log),
+            }.Where(c => c).ToArray();
 
             // ---- placeholders for what the old game did not have ----
             void PH(string name, int count, Func<int, float[]> make)
@@ -112,6 +123,12 @@ namespace Game.Editor
             a.wolfCharge = Cue("Cue_Wolf_Charge", c => { c.clips = new[] { barkDouble }; c.output = G("Animals"); c.minDistance = 5f; c.maxDistance = 100f; c.priority = 10; c.pitch = new Vector2(0.82f, 0.9f); c.placeholderFor = "PRD-01 wolf: snarling attack (old double bark for now)"; }, log);
             a.wolfHurt = Cue("Cue_Wolf_Hurt", c => { c.clips = new[] { whine }; c.output = G("Animals"); c.minDistance = 4f; c.maxDistance = 90f; c.priority = 20; }, log);
             a.ambience = Cue("Cue_Ambience_Meadow", c => { c.clips = new[] { meadowClip }; c.output = G("Ambience"); c.spatialBlend = 0f; c.loop = true; c.volume = 0.55f; c.volumeJitter = 0f; c.pitch = Vector2.one; c.priority = 64; c.placeholderFor = "AMB-03 meadow, day (old 7 s loop for now)"; }, log);
+
+            // ---- the owner's added sounds take over from the placeholders ----
+            Upgrade(a.shot, new[] { rifleShot }, "Old game sound. WPN-01 shot + WPN-02 echo can replace it.");
+            Upgrade(a.reload, new[] { reloadClip }, "Old game sound. WPN-05 can replace it.");
+            Upgrade(a.hitAnimal, new[] { fleshHit }, "Old game sound. WPN-15 (dull thud, not wet) can replace it.", "SFX_HitAnimal");
+            Upgrade(stepCues[SurfaceKind.Grass], grassSteps, "Old game walk/run cut into single steps. PLY-01 can replace them.");
 
             // ---- surfaces: their footsteps, bullet impacts and dust colour (kept if already set by hand) ----
             var dust = new Dictionary<SurfaceKind, Color>
@@ -179,6 +196,39 @@ namespace Game.Editor
             return AssetDatabase.LoadAssetAtPath<AudioClip>(dst);
         }
 
+        // Cuts a part of an old clip into a mono .wav (short fades, levelled to the same peak), e.g. one footstep.
+        static AudioClip CutOldClip(string src, string dst, float start, float end, StringBuilder log)
+        {
+            string from = $"{OldGameDir}/{src}", to = $"{AudioDir}/{dst}";
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(from);
+            if (!clip) { log.AppendLine("WARNING: old sound missing " + from); return null; }
+            var data = new float[clip.samples * clip.channels];
+            if (!clip.GetData(data, 0)) { log.AppendLine("WARNING: cannot read " + from); return null; }
+            int a = Mathf.Clamp((int)(start * clip.frequency), 0, clip.samples), b = Mathf.Clamp((int)(end * clip.frequency), a + 1, clip.samples);
+            var cut = new float[b - a];
+            for (int i = 0; i < cut.Length; i++)
+            {
+                float sum = 0f;
+                for (int c = 0; c < clip.channels; c++) sum += data[(a + i) * clip.channels + c];
+                cut[i] = sum / clip.channels;
+            }
+            int fadeIn = clip.frequency / 200, fadeOut = clip.frequency / 30;
+            for (int i = 0; i < fadeIn && i < cut.Length; i++) cut[i] *= i / (float)fadeIn;
+            for (int i = 0; i < fadeOut && i < cut.Length; i++) cut[cut.Length - 1 - i] *= i / (float)fadeOut;
+            float peak = 1e-6f;
+            foreach (float v in cut) peak = Mathf.Max(peak, Mathf.Abs(v));
+            for (int i = 0; i < cut.Length; i++) cut[i] *= 0.8f / peak;
+            if (WriteIfChanged(to, Synth.Wav(cut, clip.frequency))) { AssetDatabase.ImportAsset(to); log.AppendLine("cut " + to); }
+            var imp = (AudioImporter)AssetImporter.GetAtPath(to);
+            imp.defaultSampleSettings = new AudioImporterSampleSettings
+            {
+                loadType = AudioClipLoadType.DecompressOnLoad, compressionFormat = AudioCompressionFormat.ADPCM,
+                sampleRateSetting = AudioSampleRateSetting.PreserveSampleRate, preloadAudioData = true,
+            };
+            imp.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<AudioClip>(to);
+        }
+
         static void ImportPlaceholders()
         {
             foreach (var path in Directory.GetFiles(PlaceholderDir, "PH_*.wav").Select(p => p.Replace('\\', '/')))
@@ -198,6 +248,21 @@ namespace Game.Editor
 
         static AudioClip[] PHClips(string name, int count) =>
             Enumerable.Range(1, count).Select(i => AssetDatabase.LoadAssetAtPath<AudioClip>($"{PlaceholderDir}/PH_{name}_{i:00}.wav")).Where(c => c).ToArray();
+
+        // Gives a cue better clips, but only while it still plays generated placeholders (or a stand-in named in
+        // 'superseded'): a sound set by hand is never overwritten.
+        static void Upgrade(SoundCue cue, AudioClip[] clips, string note, params string[] superseded)
+        {
+            clips = clips.Where(c => c).ToArray();
+            if (!cue || clips.Length == 0) return;
+            if (cue.clips != null && cue.clips.SequenceEqual(clips)) return;
+            bool replaceable = cue.clips == null || cue.clips.All(c => !c
+                || AssetDatabase.GetAssetPath(c).StartsWith(PlaceholderDir) || superseded.Contains(c.name));
+            if (!replaceable) return;
+            cue.clips = clips;
+            cue.placeholderFor = note;
+            EditorUtility.SetDirty(cue);
+        }
 
         static SoundCue Cue(string name, Action<SoundCue> setup, StringBuilder log)
         {

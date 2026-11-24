@@ -14,6 +14,9 @@ Every owner decision from section 21 of the game plan, with the date it was made
 | 2026-11-19 | — | Staging in Git | `Assets/_Incoming/` and `SourceAssets/OldGame/` stay local only (6.6 GB of old assets); only gate-passed assets are committed |
 | 2026-11-20 | — | Old environments (Alpine, Savanna, Snow) | Accepted as the starting base after the URP port, though they don't match the Built-in look. They'll be expanded (farm elements, more ground as the player walks) or replaced later if needed. Likely cause of the look difference: this project is Linear colour space, while the old art was baked for the old project's (probably Gamma) colour space. Regrade the materials when the look is worked on |
 | 2026-11-19 | — | Unity version | 6000.3.26f1 (Unity 6.3 LTS), URP 17.3. Stay on this LTS line |
+| 2026-11-24 | 6★ | Old project | `C:\Projects\huntinggame`, inventoried read-only in `Docs/OldProjectInventory.md`. App ID `com.MetaphaseGames.PredatorHunting`, version code 99: the relaunch keeps the app ID and signing key and ships version code 100 or higher. Play Console test track access still to confirm |
+| 2026-11-24 | 2 | Old monetisation | AppLovin MAX with the AdMob adapter; products `removeads` and `unlockall` (not sold by the current code). Old players' `ShowAds` / `BuyEverything` flags must be honoured |
+| 2026-11-24 | 7★ | Old animal licences | Partly answered: the old game had no wolf; its animals are mainly the Truebones "Z-OO" pack (licence to confirm). Dinosaur folders (one named "PrimalCarnage") are not carried over |
 
 ## Open (defaults in use)
 
