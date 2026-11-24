@@ -32,23 +32,39 @@ namespace Game.Editor
             public float height;          // metres at instance scale 1
             public float crown;           // crown radius as a share of the mesh's width (shadow stamping)
             public bool conifer, shrub;
-            public DressKind(string name, string source, float height, float crown = 0.4f, bool conifer = false, bool shrub = false)
-            { this.name = name; this.source = source; this.height = height; this.crown = crown; this.conifer = conifer; this.shrub = shrub; }
+            // texture grade: a common brightness (sRGB luma), green hue in degrees and saturation, so one plant's
+            // photo matches the next; the final match to the environment is the tint below
+            public float luma, hue, sat;
+            public bool trimBase;         // the photo has a strip of grass under the trunk: cut it
+            // instance tint, measured on screen (lit, graded, post-processed) so the plant's average colour matches
+            // the environment's own: trees against FirB/FirC (sRGB 0.21, 0.29, 0.12), shrubs against BushA/B
+            public Color tint = Color.white;
+            public DressKind(string name, string source, float height, float crown = 0.4f, bool conifer = false, bool shrub = false,
+                             float luma = 0.18f, float hue = 68f, float sat = 0.36f, bool trimBase = false)
+            {
+                this.name = name; this.source = source; this.height = height; this.crown = crown; this.conifer = conifer; this.shrub = shrub;
+                this.luma = luma; this.hue = hue; this.sat = sat; this.trimBase = trimBase;
+            }
         }
 
+        // Only the pack's trees whose shapes sit with the painted firs: the round "lollipop" broadleaf and ball
+        // bushes (Tree_05, 15, 21) looked like toys next to them and were dropped; the environment's own firs and
+        // bushes fill those roles instead.
         static readonly DressKind[] DressTrees =
         {
-            new DressKind("MD_TreeDeodar", "Tree_03", 17f, 0.42f, conifer: true),
-            new DressKind("MD_TreeOak", "Tree_11", 13f, 0.45f),
-            new DressKind("MD_TreeBroadleaf", "Tree_05", 10f, 0.42f),
+            new DressKind("MD_TreeDeodar", "Tree_03", 17f, 0.42f, conifer: true, luma: 0.26f, hue: 72f, sat: 0.36f)
+                { tint = new Color(1.216f, 1.467f, 1.116f) },
+            new DressKind("MD_TreeOak", "Tree_11", 13f, 0.45f, luma: 0.26f, hue: 74f, sat: 0.38f, trimBase: true)
+                { tint = new Color(1.282f, 1.529f, 1.085f) },   // a touch lighter than the conifers
         };
         static readonly DressKind[] DressShrubs =
         {
-            new DressKind("MD_ShrubRound", "Tree_21", 2.2f, shrub: true),
-            new DressKind("MD_ShrubLow", "Tree_18", 1.5f, shrub: true),
-            new DressKind("MD_ShrubSmall", "Tree_15", 1.2f, shrub: true),
-            new DressKind("MD_ShrubRed", "Tree_17", 2.4f, shrub: true),   // the red-flowering shrubs of the style sheet
+            new DressKind("MD_ShrubLow", "Tree_18", 1.5f, shrub: true, luma: 0.26f, hue: 74f, sat: 0.45f)
+                { tint = new Color(1.045f, 1.142f, 0.867f) },
+            new DressKind("MD_ShrubRed", "Tree_17", 2.4f, shrub: true, luma: 0.26f, hue: 74f, sat: 0.42f)
+                { tint = new Color(1.054f, 1.054f, 1.054f) },   // the red-flowering shrubs of the style sheet (grey tint: keeps the reds)
         };
+        const string TreeAtlasPath = DressingDir + "/Textures/T_TreeAtlas.png";
         static readonly string[] FlowerColours = { "Yellow", "White", "Pink", "Purple" };
 
         static void BuildDressing(Vector3 spawn, Quaternion rot, StringBuilder log)
@@ -60,11 +76,12 @@ namespace Game.Editor
             foreach (var f in new[] { DressingDir + "/Meshes", DressingDir + "/Materials", DressingDir + "/Textures" }) EnsureFolder(f);
 
             // ---- materials ----
-            var atlas = CopyDressTexture(EasyTreesDir + "/Nature Atlas.png", DressingDir + "/Textures/T_NatureAtlas.png");
+            var uvMap = BuildTreeAtlas(DressTrees.Concat(DressShrubs).ToArray(), log);
+            var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(TreeAtlasPath);
             string flowerAtlasPath = DressingDir + "/Textures/T_FlowerAtlas.png";
-            if (WriteIfChanged(flowerAtlasPath, MakeFlowerAtlas(512))) ImportDressAtlas(flowerAtlasPath);
-            var treeMat = BakedMaterial("MD_TreeCards", atlas, wind: 0.05f, fade: Vector2.zero);
-            var shrubMat = BakedMaterial("MD_ShrubCards", atlas, wind: 0.1f, fade: Vector2.zero);
+            if (WriteIfChanged(flowerAtlasPath, MakeFlowerAtlas(512))) ImportDressAtlas(flowerAtlasPath, 512);
+            var treeMat = BakedMaterial("MD_TreeCards", atlas, wind: 0.05f, fade: Vector2.zero, crownLight: true);
+            var shrubMat = BakedMaterial("MD_ShrubCards", atlas, wind: 0.1f, fade: Vector2.zero, crownLight: true);
             var flowerMat = BakedMaterial("MD_FlowerCards", AssetDatabase.LoadAssetAtPath<Texture2D>(flowerAtlasPath), wind: 0.25f, fade: new Vector2(38f, 52f));
 
             // ---- the scatter data copy: Alpine's own content, then ours ----
@@ -75,10 +92,16 @@ namespace Game.Editor
             int Kind(FarmScatterData.Kind k) { kinds.Add(k); return kinds.Count - 1; }
             DressRocks(kinds, log);   // on copies of the rock materials: the Alpine scene keeps its own
 
-            var treeKinds = DressTrees.Select(d => (d, Kind(TreeKind(d, treeMat)))).ToArray();
-            var shrubKinds = DressShrubs.Select(d => (d, Kind(TreeKind(d, shrubMat)))).ToArray();
+            var treeKinds = DressTrees.Select(d => (d, Kind(TreeKind(d, treeMat, uvMap[d.source])))).ToArray();
+            var shrubKinds = DressShrubs.Select(d => (d, Kind(TreeKind(d, shrubMat, uvMap[d.source])))).ToArray();
             var flowerKinds = FlowerColours.Select((c, i) => Kind(FlowerKind(c, i, flowerMat))).ToArray();
-            int[] tuftKinds = Enumerable.Range(0, alpine.kinds.Length).Where(i => alpine.kinds[i].name.StartsWith("TuftWheat") || alpine.kinds[i].name.StartsWith("TuftGreen")).ToArray();
+            int[] AlpineKinds(params string[] prefixes) => Enumerable.Range(0, alpine.kinds.Length).Where(i => prefixes.Any(p => alpine.kinds[i].name.StartsWith(p))).ToArray();
+            int[] tuftKinds = AlpineKinds("TuftWheat", "TuftGreen");
+            int[] bushKinds = AlpineKinds("BushA", "BushB", "BushC");     // the environment's own bushes
+            int[] firKinds = AlpineKinds("FirB", "FirC");                 // and firs, mixed into the new groups
+            var shadowOf = new Dictionary<int, (float crown, bool conifer)>();
+            foreach (var (dk, ki) in treeKinds) shadowOf[ki] = (dk.crown, dk.conifer);
+            foreach (var ki in firKinds) shadowOf[ki] = (0.4f, true);
 
             // ---- placement ----
             var rng = new System.Random(2026);
@@ -141,8 +164,9 @@ namespace Game.Editor
                     Vector3 t = gp + new Vector3(R(-8f, 8f), 0f, R(-8f, 8f));
                     if (!Ground(t, out var tp, out float s) || s > 30f || !Free(tp, 2f, true) || !Clear(tp, 3.5f)) continue;
                     double pick = rng.NextDouble();
-                    var (dk, ki) = pick < 0.5 ? treeKinds[0] : pick < 0.78 ? treeKinds[1] : treeKinds[2];
-                    float scale = R(0.85f, 1.3f);
+                    bool fir = pick >= 0.75 && firKinds.Length > 0;
+                    int ki = fir ? firKinds[rng.Next(firKinds.Length)] : pick < 0.45 ? treeKinds[0].Item2 : treeKinds[1].Item2;
+                    float scale = fir ? R(0.7f, 1.05f) : R(0.85f, 1.3f);
                     placed.Add((ki, tp, scale, Quaternion.Euler(0f, R(0f, 360f), 0f)));
                     bigThings.Add((new Vector2(tp.x, tp.z), 2.5f * scale));
                     placedHere++; trees++;
@@ -176,7 +200,8 @@ namespace Game.Editor
                         float ang = R(0f, Mathf.PI * 2f), dist = rockR * R(0.75f, 1f) + R(0.2f, 1.2f);
                         Vector3 sp = rp + new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * dist;
                         if (!Ground(sp, out var gp, out float s) || s > 35f || !Free(gp, 0f, false)) continue;
-                        var (dk, ki) = shrubKinds[rng.NextDouble() < 0.15 ? 3 : rng.Next(0, 3)];
+                        double pick = rng.NextDouble();
+                        int ki = pick < 0.15 ? shrubKinds[1].Item2 : pick < 0.32 || bushKinds.Length == 0 ? shrubKinds[0].Item2 : bushKinds[rng.Next(bushKinds.Length)];
                         placed.Add((ki, gp, R(0.8f, 1.25f), Quaternion.Euler(0f, R(0f, 360f), 0f)));
                         shrubs++;
                     }
@@ -192,13 +217,14 @@ namespace Game.Editor
                     }
                 }
             }
-            foreach (var t in placed.Where(p => treeKinds.Any(k => k.Item2 == p.kind)).ToArray())
+            foreach (var t in placed.Where(p => shadowOf.ContainsKey(p.kind)).ToArray())
             {
                 if (rng.NextDouble() > 0.5) continue;
                 float ang = R(0f, Mathf.PI * 2f);
                 Vector3 sp = t.pos + new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * R(1.5f, 3f);
                 if (!Ground(sp, out var gp, out float s) || !Free(gp, 0f, false)) continue;
-                placed.Add((shrubKinds[rng.Next(0, 3)].Item2, gp, R(0.8f, 1.2f), Quaternion.Euler(0f, R(0f, 360f), 0f)));
+                int ki = bushKinds.Length > 0 && rng.NextDouble() < 0.7 ? bushKinds[rng.Next(bushKinds.Length)] : shrubKinds[0].Item2;
+                placed.Add((ki, gp, R(0.8f, 1.2f), Quaternion.Euler(0f, R(0f, 360f), 0f)));
                 shrubs++;
             }
 
@@ -256,11 +282,11 @@ namespace Game.Editor
             scatter.Build();
 
             // ---- ground shadows of the new trees ----
-            StampTreeShadows(placed.Where(p => treeKinds.Any(k => k.Item2 == p.kind)).Select(p =>
+            StampTreeShadows(placed.Where(p => shadowOf.ContainsKey(p.kind)).Select(p =>
             {
-                var dk = treeKinds.First(k => k.Item2 == p.kind).Item1;
+                var (crown, conifer) = shadowOf[p.kind];
                 var mb = kinds[p.kind].mesh.bounds;
-                return (p.pos, mb.size.y * p.scale, Mathf.Max(mb.extents.x, mb.extents.z) * p.scale * dk.crown / 0.5f, dk.conifer);
+                return (p.pos, mb.size.y * p.scale, Mathf.Max(mb.extents.x, mb.extents.z) * p.scale * crown / 0.5f, conifer);
             }).ToArray(), log);
 
             EnsureDressingCoverRules(log);
@@ -281,23 +307,31 @@ namespace Game.Editor
 
         // ---------- kinds and meshes ----------
 
-        static FarmScatterData.Kind TreeKind(DressKind d, Material mat)
+        static MeshFilter[] TreeLodFilters(GameObject prefab)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{EasyTreesDir}/Trees_Prefabs/{d.source}.prefab");
             var lodGroup = prefab.GetComponent<LODGroup>();
             var lods = lodGroup ? lodGroup.GetLODs() : null;
+            var all = prefab.GetComponentsInChildren<MeshFilter>();
             MeshFilter Filter(int level) => lods != null && lods.Length > level && lods[level].renderers.Length > 0
-                ? lods[level].renderers[0].GetComponent<MeshFilter>() : prefab.GetComponentsInChildren<MeshFilter>()[Mathf.Min(level, prefab.GetComponentsInChildren<MeshFilter>().Length - 1)];
-            var near = BakeCardMesh(prefab, Filter(0), d.height, $"{d.name}_LOD0");
-            var far = BakeCardMesh(prefab, Filter(1), d.height, $"{d.name}_LOD1");
+                ? lods[level].renderers[0].GetComponent<MeshFilter>() : all[Mathf.Min(level, all.Length - 1)];
+            return new[] { Filter(0), Filter(1) };
+        }
+
+        static FarmScatterData.Kind TreeKind(DressKind d, Material mat, (Rect src, Rect dst) uvMap)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{EasyTreesDir}/Trees_Prefabs/{d.source}.prefab");
+            var filters = TreeLodFilters(prefab);
+            var near = BakeCardMesh(prefab, filters[0], d, uvMap, $"{d.name}_LOD0");
+            var far = BakeCardMesh(prefab, filters[1], d, uvMap, $"{d.name}_LOD1");
             bool tree = !d.shrub;
             return new FarmScatterData.Kind
             {
                 name = d.name,
                 mesh = near,
                 materials = new[] { mat },
-                tintA = tree ? new Color(0.9f, 0.95f, 0.88f) : new Color(0.8f, 0.84f, 0.78f),
-                tintB = tree ? new Color(1.06f, 1.04f, 0.95f) : new Color(0.95f, 0.96f, 0.88f),
+                // brightness and colour are graded into the atlas; the tints only vary one plant from the next
+                tintA = d.tint * 0.93f,
+                tintB = d.tint * 1.06f,
                 cullDistance = tree ? 0f : 170f,
                 detail = d.shrub,
                 lodMesh = far != near ? far : null,
@@ -307,9 +341,12 @@ namespace Game.Editor
         }
 
         // One prefab mesh in the prefab's own space, scaled to the wanted height, base at y = 0, wind weight in
-        // vertex alpha (0 at the ground, 1 at the top), saved in place so the asset keeps its GUID on rebuilds.
-        static Mesh BakeCardMesh(GameObject prefab, MeshFilter mf, float height, string name)
+        // vertex alpha (0 at the ground, 1 at the top), UVs moved into our tree atlas, and the crown-local position
+        // in UV1 (centre of the crown = 0, its edge = 1) for SV_Baked's _CROWNLIGHT sun shading. Saved in place so
+        // the asset keeps its GUID on rebuilds.
+        static Mesh BakeCardMesh(GameObject prefab, MeshFilter mf, DressKind d, (Rect src, Rect dst) uvMap, string name)
         {
+            float height = d.height;
             var src = mf.sharedMesh;
             Matrix4x4 m = prefab.transform.worldToLocalMatrix * mf.transform.localToWorldMatrix;
             var verts = src.vertices.Select(v => m.MultiplyPoint3x4(v)).ToArray();
@@ -318,6 +355,12 @@ namespace Game.Editor
             float s = height / Mathf.Max(0.01f, maxY - minY);
             for (int i = 0; i < verts.Length; i++) verts[i] = new Vector3(verts[i].x * s, (verts[i].y - minY) * s, verts[i].z * s);
             var colours = verts.Select(v => new Color(1f, 1f, 1f, Mathf.Pow(Mathf.Clamp01(v.y / height), 1.5f))).ToArray();
+            var uvs = src.uv.Select(u => new Vector2(
+                uvMap.dst.xMin + (u.x - uvMap.src.xMin) / uvMap.src.width * uvMap.dst.width,
+                uvMap.dst.yMin + (u.y - uvMap.src.yMin) / uvMap.src.height * uvMap.dst.height)).ToArray();
+            float halfW = Mathf.Max(0.1f, verts.Max(v => Mathf.Max(Mathf.Abs(v.x), Mathf.Abs(v.z))) * 0.9f);
+            float cy = height * (d.shrub ? 0.5f : 0.6f), halfH = height * (d.shrub ? 0.5f : 0.42f);
+            var crown = verts.Select(v => new Vector3(v.x / halfW, (v.y - cy) / halfH, v.z / halfW)).ToList();
 
             string path = $"{DressingDir}/Meshes/{name}.asset";
             var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
@@ -326,7 +369,8 @@ namespace Game.Editor
             mesh.Clear();
             mesh.vertices = verts;
             if (normals != null) mesh.normals = normals;
-            mesh.uv = src.uv;
+            mesh.uv = uvs;
+            mesh.SetUVs(1, crown);
             mesh.colors = colours;
             mesh.subMeshCount = 1;
             mesh.SetTriangles(src.triangles, 0);
@@ -369,7 +413,7 @@ namespace Game.Editor
             };
         }
 
-        static Material BakedMaterial(string name, Texture2D tex, float wind, Vector2 fade)
+        static Material BakedMaterial(string name, Texture2D tex, float wind, Vector2 fade, bool crownLight = false)
         {
             string path = $"{DressingDir}/Materials/{name}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -382,33 +426,172 @@ namespace Game.Editor
             mat.SetFloat("_ObjectShadow", 0.7f);          // darker when it stands in another tree's shadow
             mat.SetFloat("_WindStrength", wind);
             mat.SetFloat("_FadeStart", fade.x); mat.SetFloat("_FadeEnd", fade.y);
+            mat.SetFloat("_CrownLightOn", crownLight ? 1f : 0f);
+            if (crownLight)
+            {
+                // photo cards carry no light of their own: shade each crown like a ball lit by the day preset's sun,
+                // as the firs' baked textures are (lit side, shaded side, darker inside and underneath)
+                var day = AssetDatabase.LoadAssetAtPath<ScriptableObject>("Assets/_Game/Art/Environment/AlpineEnv/Lighting/AL_Day.asset");
+                Vector3 euler = day ? new SerializedObject(day).FindProperty("lightRotation").vector3Value : new Vector3(52f, 238f, 0f);
+                Vector3 toSun = -(Quaternion.Euler(euler) * Vector3.forward);
+                mat.SetVector("_CrownSunDir", toSun.normalized);
+                mat.SetFloat("_CrownDark", 0.68f); mat.SetFloat("_CrownLit", 1.08f);   // a gentle lit and shaded side
+                mat.SetFloat("_CrownCore", 0.8f); mat.SetFloat("_CrownBase", 0.65f);
+                mat.EnableKeyword("_CROWNLIGHT");
+            }
+            else mat.DisableKeyword("_CROWNLIGHT");
             mat.enableInstancing = true;
             EditorUtility.SetDirty(mat);
             return mat;
         }
 
-        // The pack's atlas cleaned for cutout use: bright grey-white pixels inside the leaves (sky seen through the
-        // photo) become holes, and leaf colour is spread into the holes so mipmaps don't draw a pale halo round
-        // every leaf. Saturation and brightness come down a little to sit with the environment's painted firs.
-        static Texture2D CopyDressTexture(string src, string dst)
+        // Our own tree atlas, cut from the pack's 4096 px "Nature Atlas": only the plants we use, at their full
+        // resolution (the whole pack capped to 1024 left them blurred next to the firs' 2048 px textures). Each
+        // plant is cleaned (sky seen through the leaves becomes holes; the oak's strip of grass is cut away),
+        // then graded toward the environment's painted firs: brightness, contrast, hue and saturation of the
+        // greens (reds, like the shrub's flowers, keep their colour). Colour bleeds into the holes so mipmaps
+        // draw no pale halo. Returns, per prefab, the UV rect in the pack's atlas and the one in ours.
+        static Dictionary<string, (Rect src, Rect dst)> BuildTreeAtlas(DressKind[] plants, StringBuilder log)
         {
-            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            tex.LoadImage(File.ReadAllBytes(src));
-            int w = tex.width, h = tex.height;
-            var px = tex.GetPixels();
-            Object.DestroyImmediate(tex);
-            for (int i = 0; i < px.Length; i++)
+            const int Size = 2048, Pad = 4;
+            var srcTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            srcTex.LoadImage(File.ReadAllBytes(EasyTreesDir + "/Nature Atlas.png"));
+            int sw = srcTex.width, sh = srcTex.height;
+            var spx = srcTex.GetPixels();
+
+            // each plant's pixel rect in the pack's atlas (both LOD meshes)
+            var rects = new List<(DressKind d, RectInt px)>();
+            foreach (var d in plants)
             {
-                var c = px[i];
-                Color.RGBToHSV(c, out float hue, out float sat, out float val);
-                if (c.a > 0.3f && val > 0.72f && sat < 0.22f) c.a = 0f;       // sky holes
-                Color.RGBToHSV(c, out hue, out sat, out val);
-                var g = Color.HSVToRGB(hue, sat * 0.82f, val * 0.9f);
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{EasyTreesDir}/Trees_Prefabs/{d.source}.prefab");
+                var uvs = TreeLodFilters(prefab).SelectMany(f => f.sharedMesh.uv).ToArray();
+                int x0 = Mathf.Max(0, Mathf.FloorToInt(uvs.Min(u => u.x) * sw) - Pad), y0 = Mathf.Max(0, Mathf.FloorToInt(uvs.Min(u => u.y) * sh) - Pad);
+                int x1 = Mathf.Min(sw, Mathf.CeilToInt(uvs.Max(u => u.x) * sw) + Pad), y1 = Mathf.Min(sh, Mathf.CeilToInt(uvs.Max(u => u.y) * sh) + Pad);
+                rects.Add((d, new RectInt(x0, y0, x1 - x0, y1 - y0)));
+            }
+
+            // shelf packing, tallest first; shrink all plants together until they fit
+            float scale = 1f;
+            var placedRects = new Dictionary<string, RectInt>();
+            for (int tries = 0; tries < 30; tries++, scale *= 0.92f)
+            {
+                placedRects.Clear();
+                int x = 0, y = 0, shelf = 0; bool fits = true;
+                foreach (var (d, px) in rects.OrderByDescending(r => r.px.height))
+                {
+                    int w = Mathf.CeilToInt(px.width * scale), h = Mathf.CeilToInt(px.height * scale);
+                    if (x + w > Size) { x = 0; y += shelf; shelf = 0; }
+                    if (y + h > Size || w > Size) { fits = false; break; }
+                    placedRects[d.source] = new RectInt(x, y, w, h);
+                    x += w; shelf = Mathf.Max(shelf, h);
+                }
+                if (fits) break;
+            }
+
+            var px2 = new Color[Size * Size];
+            var map = new Dictionary<string, (Rect src, Rect dst)>();
+            foreach (var (d, sr) in rects)
+            {
+                var dr = placedRects[d.source];
+                for (int y = 0; y < dr.height; y++)
+                for (int x = 0; x < dr.width; x++)
+                {
+                    Color c = scale >= 0.999f
+                        ? spx[Mathf.Min(sh - 1, sr.y + y) * sw + Mathf.Min(sw - 1, sr.x + x)]
+                        : srcTex.GetPixelBilinear((sr.x + (x + 0.5f) / scale) / sw, (sr.y + (y + 0.5f) / scale) / sh);
+                    Color.RGBToHSV(c, out float hue, out float sat, out float val);
+                    if (c.a > 0.3f && val > 0.72f && sat < 0.22f) c.a = 0f;   // sky holes
+                    px2[(dr.y + y) * Size + dr.x + x] = c;
+                }
+                if (d.trimBase) TrimGrassStrip(px2, Size, dr);
+                GradePlant(px2, Size, dr, d);
+                // the source rect in pack pixels maps onto the destination rect (shrunk by scale)
+                map[d.source] = (new Rect((float)sr.x / sw, (float)sr.y / sh, (float)sr.width / sw, (float)sr.height / sh),
+                                 new Rect((float)dr.x / Size, (float)dr.y / Size, sr.width * scale / Size, sr.height * scale / Size));
+            }
+            Object.DestroyImmediate(srcTex);
+            Bleed(px2, Size, Size, 12);
+            if (WriteIfChanged(TreeAtlasPath, PngRect(px2, Size, Size)) || AssetImporter.GetAtPath(TreeAtlasPath) == null) ImportDressAtlas(TreeAtlasPath, Size);
+            log.AppendLine($"dressing: tree atlas {Size} px, {plants.Length} plants at {scale * 100f:F0}% of the pack's resolution");
+            return map;
+        }
+
+        // The oak photo stands on a strip of grass: below the trunk, keep only the trunk's own columns.
+        static void TrimGrassStrip(Color[] px, int size, RectInt r)
+        {
+            int probe = r.y + Mathf.RoundToInt(r.height * 0.12f);
+            int mid = r.x + r.width / 2, left = -1, right = -1;
+            for (int x = r.x; x < r.xMax; x++)
+            {
+                if (px[probe * size + x].a < 0.5f) continue;
+                // the opaque run closest to the middle is the trunk
+                int a = x; while (x < r.xMax && px[probe * size + x].a >= 0.5f) x++;
+                if (left < 0 || Mathf.Abs((a + x) / 2 - mid) < Mathf.Abs((left + right) / 2 - mid)) { left = a; right = x; }
+            }
+            if (left < 0 || right - left > r.width / 4) return;   // no clear trunk: leave it
+            int top = r.y + Mathf.RoundToInt(r.height * 0.09f);
+            for (int y = r.y; y < top; y++)
+            for (int x = r.x; x < r.xMax; x++)
+                if (x < left - 3 || x > right + 3) px[y * size + x].a = 0f;
+        }
+
+        static void GradePlant(Color[] px, int size, RectInt r, DressKind d)
+        {
+            float GreenWeight(float h) { float deg = h * 360f; return Mathf.Clamp01(1f - Mathf.Max(40f - deg, deg - 160f) / 20f); }
+            // 1. hue and saturation of the greens
+            double hueSum = 0, satSum = 0, wSum = 0;
+            for (int y = r.y; y < r.yMax; y++)
+            for (int x = r.x; x < r.xMax; x++)
+            {
+                var c = px[y * size + x]; if (c.a < 0.5f) continue;
+                Color.RGBToHSV(c, out float h, out float s, out float v);
+                float w = GreenWeight(h); hueSum += h * 360f * w; satSum += s * w; wSum += w;
+            }
+            if (wSum < 1) return;
+            float hueShift = d.hue - (float)(hueSum / wSum), satRatio = d.sat / Mathf.Max(0.05f, (float)(satSum / wSum));
+            for (int y = r.y; y < r.yMax; y++)
+            for (int x = r.x; x < r.xMax; x++)
+            {
+                int i = y * size + x; var c = px[i];
+                Color.RGBToHSV(c, out float h, out float s, out float v);
+                float w = GreenWeight(h);
+                var g = Color.HSVToRGB(Mathf.Repeat(h + hueShift / 360f * w, 1f), Mathf.Clamp01(Mathf.Lerp(s, s * satRatio, w)), v);
                 px[i] = new Color(g.r, g.g, g.b, c.a);
             }
-            // bleed: 12 passes, each transparent pixel takes the mean of its solid neighbours
+            // 2. brightness and contrast: the firs are darker, with deep shade between lit tips
+            double sum = 0, sum2 = 0; int n = 0;
+            for (int y = r.y; y < r.yMax; y++)
+            for (int x = r.x; x < r.xMax; x++)
+            {
+                var c = px[y * size + x]; if (c.a < 0.5f) continue;
+                float l = 0.3f * c.r + 0.59f * c.g + 0.11f * c.b; sum += l; sum2 += l * l; n++;
+            }
+            if (n == 0) return;
+            float mean = (float)(sum / n), sd = Mathf.Sqrt(Mathf.Max(0f, (float)(sum2 / n) - mean * mean));
+            float gamma = Mathf.Clamp(0.5f / Mathf.Max(0.05f, sd / mean), 0.7f, 1.25f);   // flatter: the painted firs are smooth on screen
+            double powSum = 0;
+            for (int y = r.y; y < r.yMax; y++)
+            for (int x = r.x; x < r.xMax; x++)
+            {
+                var c = px[y * size + x]; if (c.a < 0.5f) continue;
+                powSum += Mathf.Pow((0.3f * c.r + 0.59f * c.g + 0.11f * c.b) / mean, gamma);
+            }
+            float k = d.luma / Mathf.Max(1e-4f, (float)(powSum / n));
+            for (int y = r.y; y < r.yMax; y++)
+            for (int x = r.x; x < r.xMax; x++)
+            {
+                int i = y * size + x; var c = px[i];
+                float l = Mathf.Max(1e-4f, 0.3f * c.r + 0.59f * c.g + 0.11f * c.b);
+                float f = k * Mathf.Pow(l / mean, gamma) / l;
+                px[i] = new Color(Mathf.Clamp01(c.r * f), Mathf.Clamp01(c.g * f), Mathf.Clamp01(c.b * f), c.a);
+            }
+        }
+
+        // each transparent pixel takes the mean colour of its solid neighbours, ring by ring
+        static void Bleed(Color[] px, int w, int h, int passes)
+        {
             var solid = px.Select(c => c.a >= 0.5f).ToArray();
-            for (int pass = 0; pass < 12; pass++)
+            for (int pass = 0; pass < passes; pass++)
             {
                 var next = (bool[])solid.Clone();
                 for (int y = 0; y < h; y++)
@@ -416,7 +599,7 @@ namespace Game.Editor
                 {
                     int i = y * w + x;
                     if (solid[i]) continue;
-                    float r = 0, gg = 0, b = 0; int n = 0;
+                    float r = 0, g = 0, b = 0; int n = 0;
                     for (int dy = -1; dy <= 1; dy++)
                     for (int dx = -1; dx <= 1; dx++)
                     {
@@ -424,19 +607,17 @@ namespace Game.Editor
                         if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
                         int j = yy * w + xx;
                         if (!solid[j]) continue;
-                        r += px[j].r; gg += px[j].g; b += px[j].b; n++;
+                        r += px[j].r; g += px[j].g; b += px[j].b; n++;
                     }
                     if (n == 0) continue;
-                    px[i] = new Color(r / n, gg / n, b / n, px[i].a);
+                    px[i] = new Color(r / n, g / n, b / n, px[i].a);
                     next[i] = true;
                 }
                 solid = next;
             }
-            if (WriteIfChanged(dst, PngRect(px, w, h)) || AssetImporter.GetAtPath(dst) == null) ImportDressAtlas(dst);
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(dst);
         }
 
-        static void ImportDressAtlas(string path)
+        static void ImportDressAtlas(string path, int maxSize)
         {
             AssetDatabase.ImportAsset(path);
             var ti = (TextureImporter)AssetImporter.GetAtPath(path);
@@ -447,10 +628,10 @@ namespace Game.Editor
             ti.mipmapEnabled = true;
             ti.crunchedCompression = false;
             ti.textureCompression = TextureImporterCompression.Compressed;
-            ti.maxTextureSize = 1024;
+            ti.maxTextureSize = maxSize;
             ti.wrapMode = TextureWrapMode.Clamp;
             ti.SetPlatformTextureSettings(new TextureImporterPlatformSettings
-            { name = "Android", overridden = true, maxTextureSize = 1024, format = TextureImporterFormat.ASTC_6x6, compressionQuality = 50 });
+            { name = "Android", overridden = true, maxTextureSize = maxSize, format = TextureImporterFormat.ASTC_6x6, compressionQuality = 50 });
             ti.SaveAndReimport();
         }
 
@@ -627,7 +808,7 @@ namespace Game.Editor
             for (int x = Mathf.Max(0, (int)(u - rp - 2)); x <= Mathf.Min(w - 1, (int)(u + rp + 2)); x++)
             {
                 float d = Mathf.Sqrt((x - u) * (x - u) + (y - v) * (y - v)) / Mathf.Max(0.5f, rp);
-                float cover = strength * (1f - Mathf.SmoothStep(0.55f, 1f, d));
+                float cover = strength * (1f - SmoothEdge(0.55f, 1f, d));
                 if (cover <= 0f) continue;
                 int i = y * w + x;
                 var c = px[i];

@@ -29,6 +29,14 @@ Shader "SavannaEnv/Baked"
         _DetailMean ("Detail Average Brightness", Float) = 0.35
         _MossColor ("Moss On Top", Color) = (0.42, 0.5, 0.18, 1)
         _MossAmount ("Moss On Upward Faces", Range(0, 1)) = 0.45
+
+        [Header(Crown light for photo card trees)]
+        [Toggle(_CROWNLIGHT)] _CrownLightOn ("Shade Crowns Like A Lit Ball", Float) = 0
+        _CrownSunDir ("Direction To The Sun (world)", Vector) = (0.44, 0.79, 0.28, 0)
+        _CrownDark ("Shaded Side", Range(0, 1.5)) = 0.55
+        _CrownLit ("Lit Side", Range(0, 2)) = 1.2
+        _CrownCore ("Inside Of The Crown", Range(0, 1)) = 0.72
+        _CrownBase ("Under The Crown", Range(0, 1)) = 0.6
     }
 
     SubShader
@@ -54,12 +62,15 @@ Shader "SavannaEnv/Baked"
             half _Cull, _EdgeFadeOn;
             float4 _MossColor;
             float _DetailScale, _DetailStrength, _DetailMean, _MossAmount, _RockDetailOn;
+            float4 _CrownSunDir;
+            float _CrownLightOn, _CrownDark, _CrownLit, _CrownCore, _CrownBase;
         CBUFFER_END
 
         struct Attributes
         {
             float4 vertex : POSITION;
             float2 uv : TEXCOORD0;
+            float3 crown : TEXCOORD1;    // crown-local position (centre 0, edge 1); only _CROWNLIGHT reads it
             half4 color : COLOR;
             float3 normal : NORMAL;
             UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -115,6 +126,7 @@ Shader "SavannaEnv/Baked"
             #pragma shader_feature_local _CUTOUT
             #pragma shader_feature_local _EDGEFADE
             #pragma shader_feature_local _ROCKDETAIL
+            #pragma shader_feature_local _CROWNLIGHT
 
             struct Varyings
             {
@@ -125,6 +137,9 @@ Shader "SavannaEnv/Baked"
                 float cutoff : TEXCOORD3;
                 #if defined(_ROCKDETAIL)
                     float3 wnrm : TEXCOORD4;
+                #endif
+                #if defined(_CROWNLIGHT)
+                    float3 crown : TEXCOORD5;
                 #endif
             };
 
@@ -149,6 +164,10 @@ Shader "SavannaEnv/Baked"
                 #if defined(_ROCKDETAIL)
                     o.wnrm = TransformObjectToWorldNormal(v.normal);
                 #endif
+                #if defined(_CROWNLIGHT)
+                    float3x3 m3 = (float3x3)GetObjectToWorldMatrix();
+                    o.crown = mul(m3, v.crown) / max(1e-4, length(float3(m3._m00, m3._m10, m3._m20)));   // instance rotation, not scale
+                #endif
                 return o;
             }
 
@@ -170,6 +189,14 @@ Shader "SavannaEnv/Baked"
                     // moss gathers on the tops of boulders, patchy (the detail photo's own green breaks it up)
                     float moss = saturate((n.y - (1.0 - _MossAmount)) * 3.0) * saturate(d.g / max(0.05, _DetailMean) - 0.6);
                     baked = lerp(baked, _MossColor.rgb * (dot(tex.rgb, float3(0.3, 0.59, 0.11)) * 2.0), saturate(moss));
+                #endif
+                #if defined(_CROWNLIGHT)
+                    // a photo card has no light of its own: treat the crown as a ball lit by the sun (lit side,
+                    // shaded side), darker deep inside and underneath, as the firs' baked textures are
+                    float3 p = i.crown;
+                    float r = length(p);
+                    float lit = saturate(dot(p / max(r, 1e-3), _CrownSunDir.xyz) * 0.5 + 0.5);
+                    baked *= lerp(_CrownDark, _CrownLit, lit) * lerp(_CrownCore, 1.0, saturate(r)) * lerp(_CrownBase, 1.0, saturate(p.y + 1.0));
                 #endif
                 half3 c = ENV_Grade(baked * i.tint);
                 return half4(ENV_ApplyFog(c, i.wpos), 1);

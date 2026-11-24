@@ -12,6 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _CROWNLIGHT
   - _CUTOUT
   - _EDGEFADE
   m_InvalidKeywords: []
@@ -30,11 +31,16 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 17b4cc09c72e8714c8dc9a836b135604, type: 3}
+        m_Texture: {fileID: 2800000, guid: e083b0e06789c5b4f9e3e5458f1da8e5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _CrownBase: 0.65
+    - _CrownCore: 0.8
+    - _CrownDark: 0.68
+    - _CrownLightOn: 1
+    - _CrownLit: 1.08
     - _Cull: 0
     - _Cutoff: 0.5
     - _DetailMean: 0.35
@@ -51,6 +57,7 @@ Material:
     - _WindSpeed: 1.2
     - _WindStrength: 0.1
     m_Colors:
+    - _CrownSunDir: {r: 0.52211046, g: 0.7880108, b: 0.32625094, a: 0}
     - _MossColor: {r: 0.41999996, g: 0.5, b: 0.17999998, a: 1}
     - _ShadowTint: {r: 0.62, g: 0.6, b: 0.6, a: 1}
     - _TintA: {r: 1, g: 1, b: 1, a: 1}

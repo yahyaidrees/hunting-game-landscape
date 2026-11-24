@@ -35,6 +35,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _CrownBase: 0.6
+    - _CrownCore: 0.72
+    - _CrownDark: 0.55
+    - _CrownLightOn: 0
+    - _CrownLit: 1.2
     - _Cull: 2
     - _Cutoff: 0
     - _DetailMean: 0.33
@@ -51,6 +56,7 @@ Material:
     - _WindSpeed: 0
     - _WindStrength: 0
     m_Colors:
+    - _CrownSunDir: {r: 0.44, g: 0.79, b: 0.28, a: 0}
     - _MossColor: {r: 0.42, g: 0.5, b: 0.18, a: 1}
     - _ShadowTint: {r: 0.62, g: 0.6, b: 0.6, a: 1}
     - _TintA: {r: 1, g: 1, b: 1, a: 1}
