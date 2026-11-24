@@ -13,6 +13,18 @@ MonoBehaviour:
   m_Name: ScatterCover_Alpine
   m_EditorClassIdentifier: Game.Core::Game.Core.Cover.ScatterCoverRules
   rules:
+  - kindPrefix: MD_Shrub
+    cover: 2
+    shape: 2
+    sizeFactor: 0.8
+    visibility: 0.35
+    surface: {fileID: 0}
+  - kindPrefix: MD_Tree
+    cover: 1
+    shape: 1
+    sizeFactor: 0.028
+    visibility: 1
+    surface: {fileID: 0}
   - kindPrefix: FirBaby
     cover: 2
     shape: 2

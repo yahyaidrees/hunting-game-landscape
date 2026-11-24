@@ -20,6 +20,15 @@ Shader "SavannaEnv/Baked"
         [Toggle(_EDGEFADE)] _EdgeFadeOn ("Fade Cards Seen Edge-On (mesh normals = card normals, 0 = never fade)", Float) = 0
         _EdgeFadeStart ("Edge Fade: Gone Below Facing", Range(0,1)) = 0.3
         _EdgeFadeEnd ("Edge Fade: Whole Above Facing", Range(0,1)) = 0.45
+
+        [Header(Rocks lichen and moss (style sheet))]
+        [Toggle(_ROCKDETAIL)] _RockDetailOn ("Lichen And Moss Detail", Float) = 0
+        _DetailTex ("Detail Photo (mossy rock)", 2D) = "gray" {}
+        _DetailScale ("Detail Tiles Per Metre", Float) = 0.33
+        _DetailStrength ("Detail Strength", Range(0, 1.5)) = 0.9
+        _DetailMean ("Detail Average Brightness", Float) = 0.35
+        _MossColor ("Moss On Top", Color) = (0.42, 0.5, 0.18, 1)
+        _MossAmount ("Moss On Upward Faces", Range(0, 1)) = 0.45
     }
 
     SubShader
@@ -33,6 +42,7 @@ Shader "SavannaEnv/Baked"
         #include "EnvNight.cginc"
 
         TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
+        TEXTURE2D(_DetailTex); SAMPLER(sampler_DetailTex);
 
         CBUFFER_START(UnityPerMaterial)
             float4 _MainTex_ST;
@@ -42,6 +52,8 @@ Shader "SavannaEnv/Baked"
             float _FadeStart, _FadeEnd;
             half _EdgeFadeStart, _EdgeFadeEnd;
             half _Cull, _EdgeFadeOn;
+            float4 _MossColor;
+            float _DetailScale, _DetailStrength, _DetailMean, _MossAmount, _RockDetailOn;
         CBUFFER_END
 
         struct Attributes
@@ -102,6 +114,7 @@ Shader "SavannaEnv/Baked"
             #pragma instancing_options assumeuniformscaling nolodfade nolightprobe nolightmap
             #pragma shader_feature_local _CUTOUT
             #pragma shader_feature_local _EDGEFADE
+            #pragma shader_feature_local _ROCKDETAIL
 
             struct Varyings
             {
@@ -110,6 +123,9 @@ Shader "SavannaEnv/Baked"
                 float3 tint : TEXCOORD1;     // all varyings float: half varyings arrived as garbage on scattered pixels
                 float3 wpos : TEXCOORD2;
                 float cutoff : TEXCOORD3;
+                #if defined(_ROCKDETAIL)
+                    float3 wnrm : TEXCOORD4;
+                #endif
             };
 
             Varyings vert (Attributes v)
@@ -130,6 +146,9 @@ Shader "SavannaEnv/Baked"
                 half vis = lerp(s.b, s.r, _ObjectShadow);
                 o.tint = lerp(_TintA.rgb, _TintB.rgb, frac(rand * 7.31 + 0.13)) * lerp(_ShadowTint.rgb, half3(1, 1, 1), vis) * ENV_NearShade(wpos);
                 o.wpos = wpos;
+                #if defined(_ROCKDETAIL)
+                    o.wnrm = TransformObjectToWorldNormal(v.normal);
+                #endif
                 return o;
             }
 
@@ -139,7 +158,20 @@ Shader "SavannaEnv/Baked"
                 #if defined(_CUTOUT)
                     clip(tex.a - i.cutoff);
                 #endif
-                half3 c = ENV_Grade(tex.rgb * i.tint);
+                float3 baked = tex.rgb;
+                #if defined(_ROCKDETAIL)
+                    // lichen and moss from a rock photo, projected from three sides (no UV stretching), over the baked light
+                    float3 n = normalize(i.wnrm);
+                    float3 bw = pow(abs(n), 4.0); bw /= dot(bw, float3(1, 1, 1));
+                    float3 d = SAMPLE_TEXTURE2D(_DetailTex, sampler_DetailTex, i.wpos.zy * _DetailScale).rgb * bw.x
+                             + SAMPLE_TEXTURE2D(_DetailTex, sampler_DetailTex, i.wpos.xz * _DetailScale).rgb * bw.y
+                             + SAMPLE_TEXTURE2D(_DetailTex, sampler_DetailTex, i.wpos.xy * _DetailScale).rgb * bw.z;
+                    baked *= lerp(float3(1, 1, 1), d / max(0.05, _DetailMean), _DetailStrength);
+                    // moss gathers on the tops of boulders, patchy (the detail photo's own green breaks it up)
+                    float moss = saturate((n.y - (1.0 - _MossAmount)) * 3.0) * saturate(d.g / max(0.05, _DetailMean) - 0.6);
+                    baked = lerp(baked, _MossColor.rgb * (dot(tex.rgb, float3(0.3, 0.59, 0.11)) * 2.0), saturate(moss));
+                #endif
+                half3 c = ENV_Grade(baked * i.tint);
                 return half4(ENV_ApplyFog(c, i.wpos), 1);
             }
             ENDHLSL
