@@ -64,6 +64,7 @@ namespace Game.Editor
             var tracking = EnsureTrackingAssets(log);
             var weapons = EnsureWeaponAssets(log);
             audioAssets = EnsureAudioAssets(surfaces, log);
+            rifleAssets = EnsureRifleAssets(weapons.rifle, log);
             var animals = EnsureAnimalAssets(weapons.blood, log);
             AssetDatabase.SaveAssets();
 

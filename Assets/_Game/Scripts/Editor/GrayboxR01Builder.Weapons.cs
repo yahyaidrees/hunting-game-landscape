@@ -202,6 +202,22 @@ namespace Game.Editor
             overlayData.renderShadows = false;
             cam.GetUniversalAdditionalCameraData().cameraStack.Add(overlay);
 
+            if (rifleAssets != null)
+            {
+                var real = BuildRifleViewModel(pivot.transform, rifleAssets, w.layer);
+                var realWeapon = root.AddComponent<WeaponController>();
+                SetRefs(realWeapon, ("weapon", w.rifle), ("controller", root.GetComponent<FirstPersonController>()),
+                    ("input", root.GetComponent<PlayerInputReader>()), ("viewCamera", cam), ("weaponModel", real),
+                    ("killCamera", AddKillCamera(root, cam, realWeapon, w)));
+                var wso = new SerializedObject(realWeapon);
+                wso.FindProperty("hipPosition").vector3Value = RifleHipPosition;
+                wso.FindProperty("aimPosition").vector3Value = RifleAimPosition;
+                wso.ApplyModifiedPropertiesWithoutUndo();
+                SetRefs(root.AddComponent<WeaponViewModel>(), ("weapon", realWeapon), ("animator", real.GetComponentInChildren<Animator>()));
+                AddWeaponFeedback(root, real, cam, realWeapon, w);
+                return;
+            }
+
             // placeholder rifle: stock, receiver, barrel, scope (graybox until the real model)
             var rifle = new GameObject("Rifle").transform;
             rifle.SetParent(pivot.transform, false);
@@ -239,7 +255,7 @@ namespace Game.Editor
             flash.name = "MuzzleFlash";
             Object.DestroyImmediate(flash.GetComponent<Collider>());
             flash.transform.SetParent(rifle, false);
-            flash.transform.localPosition = new Vector3(0f, 0.005f, 0.72f);
+            flash.transform.localPosition = rifleAssets != null ? RifleMuzzle : new Vector3(0f, 0.005f, 0.72f);
             flash.transform.localScale = Vector3.one * 0.14f;
             flash.layer = w.layer;
             var fr = flash.GetComponent<MeshRenderer>();
