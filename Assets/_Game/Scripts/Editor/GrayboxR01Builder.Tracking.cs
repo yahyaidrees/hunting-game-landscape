@@ -21,7 +21,7 @@ namespace Game.Editor
             public TrackingSettings settings;
             public ClueCatalog catalog;
             public SpeciesTrackDefinition wolf;
-            public Material glow, killSite, scat, fur, twig;
+            public Material glow, killSite, scat, fur, twig, drag;
         }
 
         // ---------- assets ----------
@@ -37,6 +37,7 @@ namespace Game.Editor
             var old = DecalMaterial("M_Print_DogFamily_Old", "Print_DogFamily_Old.png", () => MakeDogPrint(true), source, log, 5);
             a.glow = DecalMaterial("M_ClueGlow", "ClueGlow_Ring.png", MakeGlowRing, source, log, 10);
             a.killSite = DecalMaterial("M_KillSite", "KillSite_Patch.png", MakeKillPatch, source, log, 2);
+            a.drag = DecalMaterial("M_DragMarks", "DragMarks_Streak.png", MakeDragMarks, source, log, 2);
             a.scat = LitMaterial("GB_Scat", new Color(0.16f, 0.12f, 0.08f), log);
             a.fur = LitMaterial("GB_Fur", new Color(0.62f, 0.60f, 0.56f), log);
             a.twig = LitMaterial("GB_Twig", new Color(0.36f, 0.26f, 0.16f), log);
@@ -215,9 +216,11 @@ namespace Game.Editor
             return Png(px, n);
         }
 
-        static byte[] Png(Color[] px, int n)
+        static byte[] Png(Color[] px, int n) => PngRect(px, n, n);
+
+        static byte[] PngRect(Color[] px, int width, int height)
         {
-            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
             tex.SetPixels(px);
             tex.Apply();
             var png = tex.EncodeToPNG();
@@ -380,6 +383,7 @@ namespace Game.Editor
                 return new Vector2(-d.y, d.x) * metres;
             }
 
+            BuildAttackScene(root, trail, spawn, rot, a, log);   // the Investigate step, before the trail's own clues
             AddClue(trail, "Clue_1_Footprint", ClueKind.Footprint, W(WolfPath[0]), 0f, null, a, 1.2f);
             var scat = AddClue(trail, "Clue_2_Scat", ClueKind.Scat, W(Along(1, 0.45f) + Side(1, 0.5f)), 3f, null, a, 1.2f);
             Scatter(scat.transform, a.scat);
@@ -395,7 +399,7 @@ namespace Game.Editor
                 "Find cover downwind and wait, or place a trail camera.", a, 2.6f);
             GroundDecal(kill.transform, "Patch", a.killSite, new Vector2(2.2f, 1.6f));
 
-            log.AppendLine($"wolf trail: {trail.points.Count} points, 5 clues");
+            log.AppendLine($"wolf trail: {trail.points.Count} points, {trail.GetComponentsInChildren<Clue>(true).Length} clues");
         }
 
         static Clue AddClue(Trail trail, string name, ClueKind kind, Vector3 position, float extraAge, string hint,

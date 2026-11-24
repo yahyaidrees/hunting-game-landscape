@@ -359,6 +359,7 @@ namespace Game.Editor
                 AddTrackingHud(safe, font, knob, parchment, forest);
                 AddWindHud(safe, font, parchment, forest);
                 AddWeaponHud((RectTransform)root.transform, safe, font, knob, weapons.scopeMask, parchment, forest);
+                AddHuntFlowHud((RectTransform)root.transform, font, parchment, forest);   // last: the cards draw on top
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, HudPrefab);
                 log.AppendLine("saved " + HudPrefab);
@@ -479,7 +480,8 @@ namespace Game.Editor
             Physics.SyncTransforms();
             BuildTrackingScene(root.transform, spawn, rot, tracking, log);
             BakeScatterCover(root.transform, spawn + rot * new Vector3(-12f, 0f, 14f), EnsureCoverRules(surfaces, log), log);
-            BuildAnimalScene(root.transform, spawn, rot, animals, log);   // after cover: the navigation mesh avoids it
+            BuildAnimalScene(root.transform, spawn, rot, animals, log);
+            BuildHuntSession(root.transform, player, log);   // after cover: the navigation mesh avoids it
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

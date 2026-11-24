@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99124c2022fc18442b4d7dd8d2ce96eb, type: 3}
+  m_Name: Hunt_R01_01_GoatPen
+  m_EditorClassIdentifier: Game.Hunt::Game.Hunt.HuntDefinition
+  huntId: R01_H01
+  title: The goat pen
+  targetName: the wolf
+  briefing: 'Something broke into the goat pen last night and took a young goat.
+    The other goats are too scared to eat.
+
+
+    Look around the pen first: the marks
+    will tell you what did it and which way it went. Then follow the trail, keep
+    the wind in your face, and end it with one clean shot.'
+  investigateTitle: Inspect the broken pen
+  investigateDetail: Signs read {found} of {total}
+  trackTitle: Follow the trail
+  trackDetail: Clues found {found} of {total}
+  stalkTitle: The wolf is close
+  stalkDetail: Approach from downwind. Stay low and quiet.
+  followBloodTitle: Follow the blood trail
+  followBloodDetail: Find it before it recovers.
+  cleanKillTitle: Clean kill
+  cleanKillText: One shot to the heart and lungs. The goats are safe, and the farm
+    will hear about this.
+  killTitle: The wolf is down
+  killText: The farm is safe. A shot to the heart and lungs would have been quicker
+    and earned more.
+  escapedTitle: It got away
+  escapedText: The wolf escaped. It will be back for the goats. Read the wind, move
+    slowly and wait for a clear shot.
+  cleanKillCoins: 300
+  killCoins: 180
+  coinsPerClue: 10
+  stalkDistance: 25
+  resultDelay: 2.5

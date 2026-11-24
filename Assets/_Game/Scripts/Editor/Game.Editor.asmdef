@@ -8,6 +8,7 @@
         "Game.Tracking",
         "Game.Animals",
         "Game.Weapons",
+        "Game.Hunt",
         "Game.Environment",
         "Unity.AI.Navigation",
         "Unity.InputSystem",

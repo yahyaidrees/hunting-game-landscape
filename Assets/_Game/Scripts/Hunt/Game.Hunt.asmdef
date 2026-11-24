@@ -2,7 +2,11 @@
     "name": "Game.Hunt",
     "rootNamespace": "Game.Hunt",
     "references": [
-        "Game.Core"
+        "Game.Core",
+        "Game.Tracking",
+        "Game.Animals",
+        "Game.Weapons",
+        "Game.Player"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
