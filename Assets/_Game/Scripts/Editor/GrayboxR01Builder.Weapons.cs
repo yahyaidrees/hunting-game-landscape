@@ -293,6 +293,7 @@ namespace Game.Editor
             var playerData = playerCam.GetUniversalAdditionalCameraData();
             shotData.renderPostProcessing = playerData.renderPostProcessing;
             shotData.antialiasing = playerData.antialiasing;
+            shotData.stopNaN = playerData.stopNaN;
             shotData.renderShadows = true;
 
             // a rifle bullet drawn about 2.5 times life size so it reads on a phone screen

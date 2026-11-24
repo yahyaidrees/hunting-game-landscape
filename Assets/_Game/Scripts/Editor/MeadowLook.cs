@@ -77,6 +77,7 @@ namespace Game.Editor
             Get<WhiteBalance>().temperature.Override(5f);
             var bloom = Get<Bloom>();
             bloom.intensity.Override(0.2f); bloom.threshold.Override(1.15f);
+            bloom.clamp.Override(6f);   // one broken bright pixel must never bloom into a screen-wide glare
             var vignette = Get<Vignette>();
             vignette.intensity.Override(0.16f); vignette.smoothness.Override(0.4f);
             EditorUtility.SetDirty(profile);

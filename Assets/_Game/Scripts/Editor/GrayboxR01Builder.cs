@@ -255,6 +255,7 @@ namespace Game.Editor
                 camData.renderShadows = true;
                 camData.renderPostProcessing = true;   // the region's colour grade (MeadowLook)
                 camData.antialiasing = AntialiasingMode.FastApproximateAntialiasing;   // cheap edge smoothing on phones
+                camData.stopNaN = true;   // an invalid pixel is dropped before the bloom can spread it
 
                 var reader = root.AddComponent<PlayerInputReader>();
                 var controller = root.AddComponent<FirstPersonController>();
@@ -464,7 +465,8 @@ namespace Game.Editor
                 zone.surface = surfaces[p.kind];
                 zone.size = new Vector3(p.size.x, 6f, p.size.y);
 
-                if (decalMats.TryGetValue(p.kind, out var mat))
+                // the striped graybox markers gave way to real ground layers (step B: GroundLayers paints them)
+                if (ShowGrayboxPatchMarkers && decalMats.TryGetValue(p.kind, out var mat))
                 {
                     var decalGo = new GameObject("Decal");
                     decalGo.transform.SetParent(zoneGo.transform, false);
@@ -479,6 +481,7 @@ namespace Game.Editor
                 }
             }
 
+            BuildGroundLayers(spawn, rot, log);
             Physics.SyncTransforms();
             BuildTrackingScene(root.transform, spawn, rot, tracking, log);
             BakeScatterCover(root.transform, spawn + rot * new Vector3(-12f, 0f, 14f), EnsureCoverRules(surfaces, log), log);
