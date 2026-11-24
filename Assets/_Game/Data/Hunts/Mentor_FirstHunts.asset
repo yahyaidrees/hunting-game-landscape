@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5f1d8d10973fa146a36d2a06661a7b9, type: 3}
+  m_Name: Mentor_FirstHunts
+  m_EditorClassIdentifier: Game.Hunt::Game.Hunt.MentorScript
+  speakerName: Ranger
+  investigate:
+    text: Easy now. Before we chase anything, read the pen. Walk up and look at the
+      torn boards.
+    voice: {fileID: 0}
+  track:
+    text: 'Now the trail. The glowing marks are signs. Read each one: the map fills
+      in as you go.'
+    voice: {fileID: 0}
+  stalk:
+    text: Slow now. Check the wind before you take another step. Keep it blowing
+      in your face.
+    voice: {fileID: 0}
+  followBlood:
+    text: 'Now find its blood on the ground and follow it. Stay ready: a hurt wolf
+      can turn on you.'
+    voice: {fileID: 0}
+  firstSign:
+  - kind: 3
+    line:
+      text: See the tooth marks? Wide apart. Too big for a fox. That's a wolf.
+      voice: {fileID: 0}
+  - kind: 4
+    line:
+      text: It dragged the goat out this way. Follow the line, and you'll find its
+        prints.
+      voice: {fileID: 0}
+  - kind: 0
+    line:
+      text: Wolf print. Four toes, and the claw tips show. The toes point the way
+        it went.
+      voice: {fileID: 0}
+  - kind: 1
+    line:
+      text: Droppings, still dark and soft. It passed here this morning.
+      voice: {fileID: 0}
+  - kind: 2
+    line:
+      text: Grey hair on the grass. It crossed the rocks here, where no print stays.
+      voice: {fileID: 0}
+  - kind: 5
+    line:
+      text: This is where it ate. It'll come back to feed. Find cover downwind, and
+        wait.
+      voice: {fileID: 0}
+  - kind: 6
+    line:
+      text: Blood. Fresh drops mean it's close. Watch the bushes ahead.
+      voice: {fileID: 0}
+  mapHint:
+    text: Open the map now and then. Every sign you read draws more of the trail.
+    voice: {fileID: 0}
+  senseHint:
+    text: Lost it? Use your Hunter Sense. It shows you the nearest sign.
+    voice: {fileID: 0}
+  senseHintAfterSeconds: 45
+  firstScope:
+    text: Easy. Breathe out, hold it, then squeeze.
+    voice: {fileID: 0}
+  miss:
+    text: Missed. Don't chase it. Breathe, and wait for a clear shot.
+    voice: {fileID: 0}
+  wounded:
+    text: 'Hit, but not clean. Aim just behind the shoulder next time: heart and
+      lungs.'
+    voice: {fileID: 0}
+  minGapSeconds: 1

@@ -15,6 +15,7 @@ MonoBehaviour:
   huntId: R01_H01
   title: The goat pen
   targetName: the wolf
+  mentor: {fileID: 11400000, guid: 922283b673452ed45897cdcf80e81cfa, type: 2}
   briefing: 'Something broke into the goat pen last night and took a young goat.
     The other goats are too scared to eat.
 

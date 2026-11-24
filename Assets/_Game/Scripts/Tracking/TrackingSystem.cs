@@ -122,6 +122,32 @@ namespace Game.Tracking
             if (!string.IsNullOrEmpty(clue.hintOverride)) body = clue.hintOverride;
             else if (clue.kind == ClueKind.Footprint && species && !string.IsNullOrEmpty(species.printHint)) body = species.printHint;
             else body = entry != null ? entry.description : "";
+            string reading = Reading(clue);
+            if (reading.Length > 0) body = reading + "\n" + body;
+        }
+
+        /// <summary>
+        /// Which way the animal was going at this sign, and for prints at what pace (plan stage 1: read direction).
+        /// Empty for signs that do not travel: where it stopped to feed, or the marks it left at the attack.
+        /// </summary>
+        public string Reading(Clue clue)
+        {
+            if (!clue.Trail || clue.kind == ClueKind.KillSite || clue.kind == ClueKind.ClawMarks) return "";
+            clue.Trail.Sample(clue.PathDistance, out _, out Vector3 dir);
+            string heading = $"Heading {Compass(dir)}";
+            if (clue.kind != ClueKind.Footprint || !clue.Trail.species) return heading + ".";
+            int stepCm = Mathf.RoundToInt(clue.Trail.species.walkStep * 100f);
+            return $"{heading} at a walk: steps about {stepCm} cm apart. A running animal leaves them two or three times farther apart.";
+        }
+
+        static readonly string[] CompassNames = { "north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west" };
+
+        /// <summary>The compass word for a horizontal direction (north is the map's up, world +Z).</summary>
+        public static string Compass(Vector3 direction)
+        {
+            float deg = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+            int sector = Mathf.RoundToInt(Mathf.Repeat(deg, 360f) / 45f) % 8;
+            return CompassNames[sector];
         }
     }
 }

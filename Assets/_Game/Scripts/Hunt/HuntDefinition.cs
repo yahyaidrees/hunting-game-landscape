@@ -17,6 +17,9 @@ namespace Game.Hunt
         [Tooltip("Who or what attacked, for the result screen (\"the wolf\").")]
         public string targetName = "the wolf";
 
+        [Tooltip("The mentor's lines for this hunt (tracking stage 1, hunts 1 to 5). Empty: no mentor.")]
+        public MentorScript mentor;
+
         [Header("Briefing (1. Alert)")]
         [TextArea(3, 8)]
         public string briefing =

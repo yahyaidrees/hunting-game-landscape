@@ -110,9 +110,18 @@ namespace Game.Editor
             var hunt = EnsureAsset<HuntDefinition>(FirstHuntPath, log);
             var wolf = root.GetComponentsInChildren<AnimalBrain>(true).FirstOrDefault();
             Clue Find(string n) => root.GetComponentsInChildren<Clue>(true).FirstOrDefault(c => c.name == n);
+            // the mentor talks the player through the first hunts (tracking stage 1)
+            var mentor = EnsureAsset<MentorScript>(HuntsDataDir + "/Mentor_FirstHunts.asset", log);
+            if (!hunt.mentor) { hunt.mentor = mentor; EditorUtility.SetDirty(hunt); }
+
             var go = new GameObject("HuntSession");
             go.transform.SetParent(root, false);
             var session = go.AddComponent<HuntSession>();
+            var voice = go.AddComponent<AudioSource>();
+            voice.playOnAwake = false;
+            voice.spatialBlend = 0f;
+            if (audioAssets != null && audioAssets.mixer) voice.outputAudioMixerGroup = audioAssets.mixer.FindMatchingGroups("Voice").FirstOrDefault();
+            SetRefs(go.AddComponent<MentorDirector>(), ("session", session), ("voice", voice));
             SetRefs(session, ("hunt", hunt), ("target", wolf), ("killSite", Find("Clue_5_KillSite")));
             var so = new SerializedObject(session);
             SetArray(so.FindProperty("attackScene"), new Object[] { Find("Clue_0a_PenMarks"), Find("Clue_0b_DragMarks") });
@@ -137,6 +146,22 @@ namespace Game.Editor
         {
             Color ink = new Color32(0x24, 0x2A, 0x22, 0xFF);
             Color amber = new Color32(0xE9, 0xA2, 0x3B, 0xFF);
+            // the mentor's subtitle, under the hunt message and clear of the clue card
+            var safe = (RectTransform)root.Find("SafeArea");
+            var sub = NewRect("Mentor", safe);
+            Anchor(sub, new Vector2(0.5f, 1f), new Vector2(0f, -285f), new Vector2(1180f, 132f));
+            var subBg = sub.gameObject.AddComponent<Image>();
+            subBg.color = new Color(0.08f, 0.1f, 0.07f, 0.72f); subBg.raycastTarget = false;
+            var subGroup = sub.gameObject.AddComponent<CanvasGroup>();
+            subGroup.blocksRaycasts = false; subGroup.interactable = false;
+            var who = NewText("Speaker", sub, font, "Ranger", 26, amber, TextAnchor.UpperLeft);
+            who.fontStyle = FontStyle.Bold;
+            Fill(who.rectTransform, new Vector2(24f, 92f), new Vector2(-24f, -8f));
+            var said = NewText("Line", sub, font, "", 32, parchment, TextAnchor.UpperLeft);
+            said.horizontalOverflow = HorizontalWrapMode.Wrap;
+            Fill(said.rectTransform, new Vector2(24f, 8f), new Vector2(-24f, -42f));
+            SetRefs(sub.gameObject.AddComponent<MentorView>(), ("group", subGroup), ("speaker", who), ("line", said));
+
             var others = root.Cast<Transform>().Select(t => t.gameObject).ToArray();   // the hunt HUD, hidden under a card
 
             var flow = NewRect("HuntFlow", root);
