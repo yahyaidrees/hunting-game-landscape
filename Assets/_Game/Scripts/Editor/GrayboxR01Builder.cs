@@ -253,7 +253,8 @@ namespace Game.Editor
                 pivot.AddComponent<AudioListener>();
                 var camData = pivot.AddComponent<UniversalAdditionalCameraData>();
                 camData.renderShadows = true;
-                camData.renderPostProcessing = false;
+                camData.renderPostProcessing = true;   // the region's colour grade (MeadowLook)
+                camData.antialiasing = AntialiasingMode.FastApproximateAntialiasing;   // cheap edge smoothing on phones
 
                 var reader = root.AddComponent<PlayerInputReader>();
                 var controller = root.AddComponent<FirstPersonController>();
