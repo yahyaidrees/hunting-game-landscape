@@ -263,7 +263,7 @@ namespace Game.Editor
             {
                 var agent = root.AddComponent<NavMeshAgent>();
                 agent.speed = behaviour.walkSpeed; agent.radius = 0.35f; agent.height = 0.95f;
-                agent.angularSpeed = 300f; agent.acceleration = 8f; agent.stoppingDistance = 0.2f;
+                agent.angularSpeed = 240f; agent.acceleration = 8f; agent.stoppingDistance = 0.2f;
                 var rb = root.AddComponent<Rigidbody>(); rb.isKinematic = true;
                 var senses = root.AddComponent<AnimalSenses>(); SetRefs(senses, ("settings", behaviour));
                 var brain = root.AddComponent<AnimalBrain>(); SetRefs(brain, ("settings", behaviour), ("senses", senses));
@@ -281,6 +281,8 @@ namespace Game.Editor
                 animator.runtimeAnimatorController = controller;
                 animator.applyRootMotion = false;   // in-place clips; the agent moves the wolf
                 animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+                // body fitted to the ground and smoothed in turns (before the animator driver, which reads its turn rate)
+                SetRefs(root.AddComponent<AnimalGrounding>(), ("model", model.transform), ("brain", brain));
                 var anim = root.AddComponent<AnimalAnimator>();
                 SetRefs(anim, ("animator", animator), ("brain", brain));
                 var animSo = new SerializedObject(anim);

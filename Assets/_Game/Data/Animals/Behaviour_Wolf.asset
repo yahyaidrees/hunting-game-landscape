@@ -34,3 +34,13 @@ MonoBehaviour:
   suspicionDecay: 0.12
   alertListenSeconds: 6
   panicDistance: 6
+  maxHealth: 100
+  bodyDamage: 60
+  legDamage: 35
+  legWoundSpeed: 0.6
+  woundedFleeDistance: 45
+  recoverPerSecond: 0.6
+  chargeDistance: 9
+  chargeSpeed: 9.5
+  chargeKnockback: 7
+  chargeGiveUpSeconds: 6

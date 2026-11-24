@@ -69,7 +69,7 @@ namespace Game.Animals
         [Header("Charge (wounded and cornered)")]
         [Tooltip("A resting wounded animal charges a hunter who comes this close.")]
         public float chargeDistance = 9f;
-        public float chargeSpeed = 11f;
+        public float chargeSpeed = 9.5f;   // the fastest the run animation covers without the feet sliding (5.6 m/s x 1.7)
         [Tooltip("Push given to the hunter when the charge connects.")]
         public float chargeKnockback = 7f;
         public float chargeGiveUpSeconds = 6f;

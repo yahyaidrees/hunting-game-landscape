@@ -22,12 +22,17 @@ namespace Game.Animals
         [SerializeField] float runClipSpeed = 5.6f;
         [Tooltip("Upper limit of that speed-up; past it the feet slide a little rather than look frantic.")]
         [SerializeField] float maxPlaybackScale = 1.7f;
+        [Tooltip("Turning on the spot plays a slow walk (this speed, m/s) so the legs step instead of the body spinning.")]
+        [SerializeField] float turnStepSpeed = 0.9f;
+        [Tooltip("Turn rate (degrees per second) that counts as a full turning step.")]
+        [SerializeField] float turnStepRate = 150f;
         [SerializeField] float crossFadeSeconds = 0.25f;
         [Tooltip("Seconds the hit flinch plays before the next animation.")]
         [SerializeField] float hitSeconds = 0.45f;
 
         NavMeshAgent agent;
         AnimalHealth health;
+        AnimalGrounding grounding;
         float speed;
         string pending;
         float pendingAt;
@@ -37,6 +42,7 @@ namespace Game.Animals
             if (!brain) brain = GetComponent<AnimalBrain>();
             agent = GetComponent<NavMeshAgent>();
             health = GetComponent<AnimalHealth>();
+            grounding = GetComponent<AnimalGrounding>();
             brain.StateChanged += OnState;
             brain.Attacked += OnAttack;
             if (health) health.Hit += OnHit;
@@ -52,6 +58,8 @@ namespace Game.Animals
         void Update()
         {
             float target = agent && agent.enabled ? agent.velocity.magnitude : 0f;
+            if (grounding && !(health && health.IsDead))
+                target = Mathf.Max(target, Mathf.Min(1f, Mathf.Abs(grounding.TurnRate) / turnStepRate) * turnStepSpeed);
             speed = Mathf.Lerp(speed, target, 1f - Mathf.Exp(-8f * Time.deltaTime));
             animator.SetFloat(SpeedId, speed);
             animator.SetFloat(MoveScaleId, Mathf.Clamp(speed / Mathf.Max(0.1f, runClipSpeed), 1f, maxPlaybackScale));

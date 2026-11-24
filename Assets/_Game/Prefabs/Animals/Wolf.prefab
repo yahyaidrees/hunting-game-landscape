@@ -290,6 +290,7 @@ GameObject:
   - component: {fileID: 4964967684315621855}
   - component: {fileID: 3127509651939231687}
   - component: {fileID: 5019004019176396654}
+  - component: {fileID: 6127290749927568330}
   - component: {fileID: 3978019978071159039}
   m_Layer: 0
   m_Name: Wolf
@@ -327,7 +328,7 @@ NavMeshAgent:
   m_Speed: 1.4
   m_Acceleration: 8
   avoidancePriority: 50
-  m_AngularSpeed: 300
+  m_AngularSpeed: 240
   m_StoppingDistance: 0.2
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
@@ -445,6 +446,31 @@ MonoBehaviour:
   howlInterval: {x: 45, y: 100}
   alarmChance: 0.6
   mouthHeight: 0.7
+--- !u!114 &6127290749927568330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4181446368429425081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bb3b7873053bc14e9fe33e7568b18ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Animals::Game.Animals.AnimalGrounding
+  model: {fileID: 2444957657635432121}
+  brain: {fileID: 5100511464347318687}
+  halfLength: 0.55
+  halfWidth: 0.16
+  maxPitch: 28
+  maxRoll: 22
+  standingRoll: 0.3
+  maxStandingRoll: 8
+  tiltSmoothing: 0.12
+  yawSmoothing: 0.1
+  turnLean: 0.004
+  maxLean: 9
+  maxHeightOffset: 0.35
 --- !u!114 &3978019978071159039
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -461,6 +487,8 @@ MonoBehaviour:
   brain: {fileID: 5100511464347318687}
   runClipSpeed: 5.6249995
   maxPlaybackScale: 1.7
+  turnStepSpeed: 0.9
+  turnStepRate: 150
   crossFadeSeconds: 0.25
   hitSeconds: 0.45
 --- !u!1 &4506888090795031911
