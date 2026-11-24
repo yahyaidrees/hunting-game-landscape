@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c47ab332cf6a822429b8e78bbcb96d60, type: 3}
+  m_Name: Cue_Step_DryLeaves
+  m_EditorClassIdentifier: Game.Core::Game.Core.Audio.SoundCue
+  clips:
+  - {fileID: 8300000, guid: ab88e0a44a080514eb03d73ef63cfc6b, type: 3}
+  - {fileID: 8300000, guid: 2f0af3008f2927e42aecf8f8569e6e60, type: 3}
+  - {fileID: 8300000, guid: ebe2f2747ce7a6a4b999ab09b2b99787, type: 3}
+  - {fileID: 8300000, guid: c4b08a57794ee1044ae724d2715a9aaf, type: 3}
+  output: {fileID: -5442649412307844985, guid: 29e58f7a2caca4a4fa87db884eae60ff, type: 2}
+  category: 0
+  volume: 0.55
+  volumeJitter: 0.1
+  pitch: {x: 0.92, y: 1.08}
+  spatialBlend: 0
+  minDistance: 2
+  maxDistance: 60
+  priority: 128
+  loop: 0
+  placeholderFor: PLY-02 footsteps, DryLeaves

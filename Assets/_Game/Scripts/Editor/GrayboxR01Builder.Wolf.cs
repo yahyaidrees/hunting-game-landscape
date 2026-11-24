@@ -269,7 +269,10 @@ namespace Game.Editor
                 var brain = root.AddComponent<AnimalBrain>(); SetRefs(brain, ("settings", behaviour), ("senses", senses));
                 var health = root.AddComponent<AnimalHealth>(); SetRefs(health, ("settings", behaviour));
                 SetRefs(brain, ("health", health));
-                var bloodTrail = root.AddComponent<BloodTrailEmitter>(); SetRefs(bloodTrail, ("health", health), ("dropMaterial", blood));
+                var bloodTrail = root.AddComponent<BloodTrailEmitter>(); SetRefs(bloodTrail, ("health", health), ("dropMaterial", blood), ("markMaterial", trailMarks));
+                if (audioAssets != null)
+                    SetRefs(root.AddComponent<AnimalVoice>(), ("brain", brain), ("howl", audioAssets.wolfHowl), ("alarm", audioAssets.wolfAlarm),
+                        ("charge", audioAssets.wolfCharge), ("hurt", audioAssets.wolfHurt));
 
                 var model = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(modelPath));
                 model.name = "Model";

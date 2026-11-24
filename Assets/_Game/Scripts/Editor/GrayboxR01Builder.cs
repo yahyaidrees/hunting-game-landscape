@@ -63,6 +63,7 @@ namespace Game.Editor
             EnsureDecalFeature("Assets/Settings/PC_Renderer.asset", log);
             var tracking = EnsureTrackingAssets(log);
             var weapons = EnsureWeaponAssets(log);
+            audioAssets = EnsureAudioAssets(surfaces, log);
             var animals = EnsureAnimalAssets(weapons.blood, log);
             AssetDatabase.SaveAssets();
 
@@ -260,6 +261,9 @@ namespace Game.Editor
                 SetRefs(playerNoise, ("controller", controller), ("settings", noise));
                 var interactor = root.AddComponent<Game.Tracking.ClueInteractor>();
                 SetRefs(interactor, ("viewCamera", cam));
+                if (audioAssets != null)
+                    SetRefs(root.AddComponent<PlayerAudio>(), ("controller", controller),
+                        ("defaultFootsteps", audioAssets.defaultSteps), ("knockedDown", audioAssets.knockedDown));
                 AddWeaponToPlayer(root, pivot, cam, weapons);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefab);

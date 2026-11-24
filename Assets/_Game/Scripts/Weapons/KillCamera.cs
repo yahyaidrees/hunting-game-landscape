@@ -25,6 +25,9 @@ namespace Game.Weapons
         [SerializeField] Behaviour[] pauseWhilePlaying;
         [SerializeField] Transform bullet;
         [SerializeField] LineRenderer trail;
+        [Tooltip("The ears move with the shot camera, so the impact is heard close, not from the hunter's spot.")]
+        [SerializeField] AudioListener playerListener;
+        [SerializeField] AudioListener shotListener;
 
         readonly List<Vector3> path = new List<Vector3>();
         readonly List<float> along = new List<float>();
@@ -45,6 +48,7 @@ namespace Game.Weapons
         {
             transform.SetParent(null, true);   // the rig flies freely, not with the hunter
             shotCamera.enabled = false;
+            if (shotListener) shotListener.enabled = false;
             bullet.gameObject.SetActive(false);
             trail.enabled = false;
         }
@@ -167,6 +171,7 @@ namespace Game.Weapons
             shotCamera.fieldOfView = settings.followFieldOfView;
             shotCamera.enabled = true;
             if (playerCamera) playerCamera.enabled = false;
+            if (playerListener && shotListener) { playerListener.enabled = false; shotListener.enabled = true; }
             bullet.gameObject.SetActive(true);
             trail.enabled = true;
             PlayingChanged?.Invoke(true);
@@ -188,6 +193,8 @@ namespace Game.Weapons
             hiddenCanvases.Clear();
             if (playerCamera) playerCamera.enabled = true;
             if (shotCamera) shotCamera.enabled = false;
+            if (shotListener) shotListener.enabled = false;
+            if (playerListener) playerListener.enabled = true;
             if (bullet) bullet.gameObject.SetActive(false);
             if (trail) trail.enabled = false;
             IsPlaying = false;

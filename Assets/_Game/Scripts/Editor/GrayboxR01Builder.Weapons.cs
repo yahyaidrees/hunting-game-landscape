@@ -22,6 +22,9 @@ namespace Game.Editor
         const string UiSpriteDir = "Assets/_Game/Art/UI/Sprites";
         const string WeaponLayerName = "FirstPersonWeapon";
 
+        /// <summary>Blood-off version of the trail drops (set by EnsureWeaponAssets).</summary>
+        static Material trailMarks;
+
         public sealed class WeaponAssets
         {
             public WeaponDefinition rifle;
@@ -63,6 +66,9 @@ namespace Game.Editor
             // generated textures are rewritten when their generator changes (same file, so the GUID and references stay)
             if (WriteIfChanged(bloodTex, MakeBloodDrops())) ImportDecalTexture(bloodTex);
             w.blood = DecalMaterialFromTexture("M_BloodDrops", bloodTex, source, 4, log);
+            string marksTex = BloodDir + "/Trail_Marks.png";
+            if (WriteIfChanged(marksTex, MakeTrailMarks())) ImportDecalTexture(marksTex);
+            trailMarks = DecalMaterialFromTexture("M_TrailMarks", marksTex, source, 4, log);
 
             string maskPath = UiSpriteDir + "/UI_ScopeMask.png";
             if (WriteIfChanged(maskPath, MakeScopeMask()))
@@ -129,7 +135,12 @@ namespace Game.Editor
         static float SmoothEdge(float edge0, float edge1, float x) => Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(edge0, edge1, x));
 
         // A few dark drops and a smear, kept small and muted (plan: light blood, never gore).
-        static byte[] MakeBloodDrops()
+        static byte[] MakeBloodDrops() => MakeDrops(new Color(0.26f, 0.05f, 0.04f), 0.85f);
+
+        // The same marks in a neutral dark earth tone: the trail to follow when blood is switched off.
+        static byte[] MakeTrailMarks() => MakeDrops(new Color(0.17f, 0.14f, 0.1f), 0.7f);
+
+        static byte[] MakeDrops(Color colour, float opacity)
         {
             const int n = 128;
             var rng = new System.Random(11);
@@ -144,7 +155,7 @@ namespace Game.Editor
                     float dist = Mathf.Sqrt((u - d.x) * (u - d.x) + (v - d.y) * (v - d.y)) / d.r;
                     a = Mathf.Max(a, SmoothEdge(1f, 0.7f, dist));
                 }
-                px[y * n + x] = new Color(0.26f, 0.05f, 0.04f, a * 0.85f);
+                px[y * n + x] = new Color(colour.r, colour.g, colour.b, a * opacity);
             }
             return Png(px, n);
         }
@@ -215,6 +226,37 @@ namespace Game.Editor
             SetRefs(weapon, ("weapon", w.rifle), ("controller", root.GetComponent<FirstPersonController>()),
                 ("input", root.GetComponent<PlayerInputReader>()), ("viewCamera", cam), ("weaponModel", rifle),
                 ("killCamera", AddKillCamera(root, cam, weapon, w)));
+            AddWeaponFeedback(root, rifle, cam, weapon, w);
+        }
+
+        // Shot, bolt, impacts and the mixer moves (sound), muzzle flash, dust, puffs and barrel smoke (sight).
+        static void AddWeaponFeedback(GameObject root, Transform rifle, Camera cam, WeaponController weapon, WeaponAssets w)
+        {
+            var a = audioAssets;
+            if (a == null) return;
+            // muzzle flash: a camera-facing star just past the barrel, on the first-person layer
+            var flash = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            flash.name = "MuzzleFlash";
+            Object.DestroyImmediate(flash.GetComponent<Collider>());
+            flash.transform.SetParent(rifle, false);
+            flash.transform.localPosition = new Vector3(0f, 0.005f, 0.72f);
+            flash.transform.localScale = Vector3.one * 0.14f;
+            flash.layer = w.layer;
+            var fr = flash.GetComponent<MeshRenderer>();
+            fr.sharedMaterial = a.muzzleFlash;
+            fr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            fr.receiveShadows = false;
+            flash.SetActive(false);
+
+            var smoke = (GameObject)PrefabUtility.InstantiatePrefab(a.barrelSmoke.gameObject);
+            smoke.transform.SetParent(root.transform, false);
+
+            SetRefs(root.AddComponent<WeaponFeedback>(),
+                ("weapon", weapon), ("viewCamera", cam),
+                ("shot", a.shot), ("bolt", a.bolt), ("dryFire", a.dryFire), ("reload", a.reload), ("scope", a.scope),
+                ("hitAnimal", a.hitAnimal), ("defaultImpact", a.defaultImpact), ("killCameraWhoosh", a.killCameraWhoosh),
+                ("muzzleFlash", flash), ("impactDust", a.impactDust), ("hitPuff", a.hitPuff),
+                ("barrelSmoke", smoke.GetComponent<ParticleSystem>()));
         }
 
         // Slow-motion kill camera rig: its own camera (sees the world, not the first-person rifle), a bullet and its air trail.
@@ -259,9 +301,14 @@ namespace Game.Editor
             trail.receiveShadows = false;
             trail.numCapVertices = 2;
 
+            // the ears ride with the shot camera while it plays
+            var shotListener = camGo.AddComponent<AudioListener>();
+            shotListener.enabled = false;
+
             var kill = rig.AddComponent<KillCamera>();
             SetRefs(kill, ("settings", w.killCamera), ("shotCamera", shotCam), ("playerCamera", playerCam),
-                ("input", root.GetComponent<PlayerInputReader>()), ("bullet", bullet), ("trail", trail));
+                ("input", root.GetComponent<PlayerInputReader>()), ("bullet", bullet), ("trail", trail),
+                ("playerListener", playerCam.GetComponent<AudioListener>()), ("shotListener", shotListener));
             var so = new SerializedObject(kill);
             var pause = so.FindProperty("pauseWhilePlaying");
             var paused = new Behaviour[] { root.GetComponent<FirstPersonController>(), weapon };

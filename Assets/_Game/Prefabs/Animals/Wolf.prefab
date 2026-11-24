@@ -289,6 +289,7 @@ GameObject:
   - component: {fileID: 5100511464347318687}
   - component: {fileID: 4964967684315621855}
   - component: {fileID: 3127509651939231687}
+  - component: {fileID: 5019004019176396654}
   - component: {fileID: 3978019978071159039}
   m_Layer: 0
   m_Name: Wolf
@@ -419,9 +420,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Game.Animals::Game.Animals.BloodTrailEmitter
   health: {fileID: 4964967684315621855}
   dropMaterial: {fileID: 2100000, guid: 9996f101983711e4fbca13e14d2d754a, type: 2}
+  markMaterial: {fileID: 2100000, guid: 29147f551cb09194a97bcc673bb6855d, type: 2}
   spacing: 1.4
   dropSize: {x: 0.28, y: 0.28}
   poolSize: 160
+--- !u!114 &5019004019176396654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4181446368429425081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dab705a3d000c50458e1bcb7427bb507, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Animals::Game.Animals.AnimalVoice
+  brain: {fileID: 5100511464347318687}
+  howl: {fileID: 11400000, guid: 2310c4ace3df6d140812f642f626ac95, type: 2}
+  alarm: {fileID: 11400000, guid: 07ef9aa2c8b6ef64fbb6270e41ca2442, type: 2}
+  charge: {fileID: 11400000, guid: 251733e374fdda54da02429faf8b2d51, type: 2}
+  hurt: {fileID: 11400000, guid: f827109c04904e14e8ea7a299685371e, type: 2}
+  firstHowl: {x: 6, y: 14}
+  howlInterval: {x: 45, y: 100}
+  alarmChance: 0.6
+  mouthHeight: 0.7
 --- !u!114 &3978019978071159039
 MonoBehaviour:
   m_ObjectHideFlags: 0

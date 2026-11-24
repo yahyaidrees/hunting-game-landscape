@@ -115,6 +115,7 @@ namespace Game.Editor
             surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
             surface.layerMask = ~(1 << ConcealmentLayer);   // bushes are walk-through cover, not obstacles
             surface.BuildNavMesh();
+            BuildAudioScene(root, log);
             if (AssetDatabase.LoadAssetAtPath<NavMeshData>(NavMeshPath)) AssetDatabase.DeleteAsset(NavMeshPath);
             AssetDatabase.CreateAsset(surface.navMeshData, NavMeshPath);
             log.AppendLine("baked " + NavMeshPath);

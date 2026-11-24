@@ -15,8 +15,12 @@ namespace Game.Weapons
         public readonly Vector3 point;
         public readonly float distance;
         public readonly float drop;
+        /// <summary>What the bullet struck (ground, rock, trunk, or an animal's hit zone); null for a miss into the air.</summary>
+        public readonly Collider collider;
+        public readonly Vector3 normal;
 
-        public ShotResult(bool hitSomething, bool hitAnimal, HitZone zone, Vector3 point, float distance, float drop)
+        public ShotResult(bool hitSomething, bool hitAnimal, HitZone zone, Vector3 point, float distance, float drop,
+            Collider collider = null, Vector3 normal = default)
         {
             this.hitSomething = hitSomething;
             this.hitAnimal = hitAnimal;
@@ -24,6 +28,8 @@ namespace Game.Weapons
             this.point = point;
             this.distance = distance;
             this.drop = drop;
+            this.collider = collider;
+            this.normal = normal;
         }
     }
 
@@ -62,6 +68,10 @@ namespace Game.Weapons
         public bool RecoveringBreath => recoverUntil > Time.time;
         public event Action<ShotResult> Fired;
         public event Action Empty;
+        public event Action ReloadStarted;
+        /// <summary>A bullet reached an animal and the hit was applied: at once, or when the kill camera's bullet arrives.</summary>
+        public event Action<HitInfo> HitLanded;
+        public KillCamera KillCamera => killCamera;
 
         void Awake()
         {
@@ -129,6 +139,7 @@ namespace Game.Weapons
             if (IsReloading || Ammo >= weapon.magazineSize) return;
             reloadDoneTime = Time.time + weapon.reloadSeconds;
             scopeWanted = false;
+            ReloadStarted?.Invoke();
         }
 
         public void Fire()
@@ -171,7 +182,7 @@ namespace Game.Weapons
                         return HitAnimal(box, hits[i].point, seg / len, travelled + hits[i].distance, origin, direction);
                     }
                     if (c.isTrigger) continue;   // bushes and other soft cover do not stop the bullet
-                    return new ShotResult(true, false, HitZone.Body, hits[i].point, travelled + hits[i].distance, DropAt(hits[i].point, origin, direction));
+                    return new ShotResult(true, false, HitZone.Body, hits[i].point, travelled + hits[i].distance, DropAt(hits[i].point, origin, direction), c, hits[i].normal);
                 }
                 travelled += len;
                 pos = next;
@@ -188,12 +199,20 @@ namespace Game.Weapons
             int n = Physics.RaycastNonAlloc(point - dir * 0.05f, dir, hits, 1.5f, ~0, QueryTriggerInteraction.Collide);
             for (int i = 0; i < n; i++)
                 if (hits[i].collider.TryGetComponent(out Hitbox b) && b.Owner == owner && b.zone > best) best = b.zone;
-            var info = new HitInfo(best, point, dir, distance, weapon.damageMultiplier);
+            Transform zone = first.transform;
+            Vector3 local = zone.InverseTransformPoint(point);
+            float multiplier = weapon.damageMultiplier;
+            void Land()
+            {
+                // where the zone is now: in a kill camera the animal has drifted a little since the trigger was pulled
+                var info = new HitInfo(best, zone ? zone.TransformPoint(local) : point, dir, distance, multiplier);
+                owner.ReceiveHit(info);
+                HitLanded?.Invoke(info);
+            }
             // a clean kill plays in slow motion first; the hit lands when the kill camera's bullet arrives
-            bool deferred = best == HitZone.Vital && killCamera
-                && killCamera.TryPlay(path, first.transform, first.transform.InverseTransformPoint(point), distance, () => owner.ReceiveHit(info));
-            if (!deferred) owner.ReceiveHit(info);
-            return new ShotResult(true, true, best, point, distance, DropAt(point, origin, aim));
+            bool deferred = best == HitZone.Vital && killCamera && killCamera.TryPlay(path, zone, local, distance, Land);
+            if (!deferred) Land();
+            return new ShotResult(true, true, best, point, distance, DropAt(point, origin, aim), first.GetComponent<Collider>(), -dir);
         }
 
         static float DropAt(Vector3 point, Vector3 origin, Vector3 aim)

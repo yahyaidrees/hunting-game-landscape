@@ -1,3 +1,4 @@
+using Game.Core.Settings;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -5,19 +6,19 @@ namespace Game.Animals
 {
     /// <summary>
     /// Leaves blood drops on the ground while a wounded animal moves (plan section 6: "a poor shot sends the animal
-    /// running with a blood trail you must follow"). Kept light per the plan's tone; a settings switch can hide it.
+    /// running with a blood trail you must follow"). Kept light per the plan's tone. With blood switched off in the
+    /// settings the trail is still there to follow, drawn as neutral disturbed-ground marks instead.
     /// </summary>
     public sealed class BloodTrailEmitter : MonoBehaviour
     {
         [SerializeField] AnimalHealth health;
         [SerializeField] Material dropMaterial;
+        [Tooltip("Drawn instead of blood when blood is switched off in the settings.")]
+        [SerializeField] Material markMaterial;
         [Tooltip("Metres between drops.")]
         [SerializeField] float spacing = 1.4f;
         [SerializeField] Vector2 dropSize = new Vector2(0.28f, 0.28f);
         [SerializeField] int poolSize = 160;
-
-        /// <summary>Global switch for the plan's "blood off" option.</summary>
-        public static bool ShowBlood = true;
 
         DecalProjector[] pool;
         Transform poolRoot;
@@ -61,7 +62,8 @@ namespace Game.Animals
 
         void Drop(Vector3 at, float scale)
         {
-            if (!ShowBlood || !dropMaterial) return;
+            var material = GameSettings.Blood || !markMaterial ? dropMaterial : markMaterial;
+            if (!material) return;
             if (pool == null) CreatePool();
             int n = Physics.RaycastNonAlloc(at + Vector3.up * 3f, Vector3.down, hits, 8f, ~0, QueryTriggerInteraction.Ignore);
             float best = float.MaxValue; RaycastHit ground = default;
@@ -75,6 +77,7 @@ namespace Game.Animals
             next = (next + 1) % pool.Length;
             d.transform.SetPositionAndRotation(ground.point, Quaternion.LookRotation(-ground.normal, Random.onUnitSphere));
             d.size = new Vector3(dropSize.x * scale, dropSize.y * scale, 0.25f);
+            d.material = material;
             d.gameObject.SetActive(true);
         }
 

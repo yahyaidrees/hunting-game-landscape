@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c47ab332cf6a822429b8e78bbcb96d60, type: 3}
+  m_Name: Cue_Step_ShallowWater
+  m_EditorClassIdentifier: Game.Core::Game.Core.Audio.SoundCue
+  clips:
+  - {fileID: 8300000, guid: 3e54e4f1f79880442835dcfa8603d43a, type: 3}
+  - {fileID: 8300000, guid: 81de6ef699eca3e438d1ea89959c4bb7, type: 3}
+  - {fileID: 8300000, guid: 9ccd72aa5cb470a4798b1f34ec00599f, type: 3}
+  - {fileID: 8300000, guid: afa9bf86c7dcda1479d71715cdbe310a, type: 3}
+  output: {fileID: -5442649412307844985, guid: 29e58f7a2caca4a4fa87db884eae60ff, type: 2}
+  category: 0
+  volume: 0.55
+  volumeJitter: 0.1
+  pitch: {x: 0.92, y: 1.08}
+  spatialBlend: 0
+  minDistance: 2
+  maxDistance: 60
+  priority: 128
+  loop: 0
+  placeholderFor: PLY-05 footsteps, ShallowWater

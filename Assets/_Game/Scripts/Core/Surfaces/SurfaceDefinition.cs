@@ -33,5 +33,13 @@ namespace Game.Core.Surfaces
 
         [Tooltip("Colour of the graybox decal that marks this surface.")]
         public Color debugColor = new Color(0.4f, 0.7f, 0.3f, 0.45f);
+
+        [Header("Sound and effects")]
+        [Tooltip("The hunter's footsteps on it (several versions).")]
+        public Audio.SoundCue footsteps;
+        [Tooltip("A bullet hitting it (plan WPN-14: miss, by surface).")]
+        public Audio.SoundCue bulletImpact;
+        [Tooltip("Colour of the dust or spray a bullet kicks up from it.")]
+        public Color impactColor = new Color(0.45f, 0.38f, 0.28f, 0.8f);
     }
 }

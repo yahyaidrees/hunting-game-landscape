@@ -18,3 +18,6 @@ MonoBehaviour:
   trackClarity: 0
   speedMultiplier: 1
   debugColor: {r: 0.55, g: 0.38, b: 0.22, a: 0.6}
+  footsteps: {fileID: 11400000, guid: 580dad30fa7b94141b4fd96a6edbab14, type: 2}
+  bulletImpact: {fileID: 11400000, guid: 565b65740c4fd7f49b8b189a1ff4a709, type: 2}
+  impactColor: {r: 0.55, g: 0.42, b: 0.28, a: 0.8}
