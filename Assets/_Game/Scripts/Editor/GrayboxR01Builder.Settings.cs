@@ -64,7 +64,11 @@ namespace Game.Editor
 
             var set = EnsureAsset<QualityTierSet>(QualityTiersPath, log);
             // Low: no HDR (measured 2.5 ms a frame on the Galaxy A30s); FXAA off is set on the tier itself
-            set.low.pipeline = Tier("Low", 0.7f, false, 25f, 1, false, false);   // baked shadows only; animals get a blob
+            // Low: no real-time shadows, but done with shadow distance 0, NOT by switching shadow support off: with
+            // support off, the Mali-G52 MC2 driver on Android 15 (VGO TEL New 26 Lite) hangs the whole GPU (found
+            // 2026-11-26; switching the tier at runtime and starting on Low both froze the phone's display).
+            // Distance 0 draws no shadow map either, so the cost and the look are the same. Animals get a blob.
+            set.low.pipeline = Tier("Low", 0.7f, true, 0f, 1, false, false);
             set.medium.pipeline = Tier("Medium", 0.85f, true, 25f, 1, false, true);
             set.high.pipeline = Tier("High", 1f, true, 50f, 2, true, true);
             set.low.fxaa = false; set.medium.fxaa = true; set.high.fxaa = true;

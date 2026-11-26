@@ -12,7 +12,9 @@ namespace Game.Core.Settings
     /// developer switch parts of the frame off and on from a PC while the game runs on a phone, to find what costs
     /// the most. Reads key=value lines from perflab.txt in the app's files folder every 2 seconds; push it with
     /// adb push perflab.txt /sdcard/Android/data/&lt;app id&gt;/files/perflab.txt. Keys:
-    /// scale (render scale), hdr, post, density (grass), scatter, far, hud, shadows (distance, 0 = off), fps.
+    /// scale (render scale), hdr, post, density (grass), scatter, far, hud, shadows (distance, 0 = off), fps,
+    /// mainshadows (real-time sun shadows supported, 0/1), miplimit (0 full textures, 1 half), fxaa (0/1),
+    /// tier (0 Low, 1 Medium, 2 High, -1 Auto: the same switch as the settings panel).
     /// Every change is logged as "[perf] lab ...", so the next [perf] line measures it.
     /// </summary>
     public sealed class PerfLab : MonoBehaviour
@@ -59,7 +61,19 @@ namespace Game.Core.Settings
                 if (values.ContainsKey("scale")) urp.renderScale = Num("scale", urp.renderScale);
                 if (values.ContainsKey("hdr")) urp.supportsHDR = Flag("hdr", true);
                 if (values.ContainsKey("shadows")) urp.shadowDistance = Num("shadows", urp.shadowDistance);
+                if (values.ContainsKey("mainshadows"))
+                {
+                    var field = typeof(UniversalRenderPipelineAsset).GetField("m_MainLightShadowsSupported",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    field?.SetValue(urp, Flag("mainshadows", true));
+                }
             }
+            if (values.ContainsKey("miplimit")) QualitySettings.globalTextureMipmapLimit = (int)Num("miplimit", 0);
+            if (values.ContainsKey("fxaa"))
+                foreach (var c in FindObjectsByType<Camera>(FindObjectsSortMode.None))
+                    if (c.TryGetComponent<UniversalAdditionalCameraData>(out var cd) && cd.renderType == CameraRenderType.Base)
+                        cd.antialiasing = Flag("fxaa", true) ? AntialiasingMode.FastApproximateAntialiasing : AntialiasingMode.None;
+            if (values.ContainsKey("tier")) GameSettings.QualityTierChoice = (int)Num("tier", GameSettings.AutoTier);
             var cam = Camera.main;
             if (cam && cam.TryGetComponent<UniversalAdditionalCameraData>(out var data) && values.ContainsKey("post"))
                 data.renderPostProcessing = Flag("post", true);
