@@ -51,6 +51,7 @@ Assets/_Game/Art/**/*.asset filter=lfs diff=lfs merge=lfs -text
 *.otf  filter=lfs diff=lfs merge=lfs -text
 *.unitypackage filter=lfs diff=lfs merge=lfs -text
 *.zip  filter=lfs diff=lfs merge=lfs -text
+*.tgz  filter=lfs diff=lfs merge=lfs -text
 *.7z   filter=lfs diff=lfs merge=lfs -text
 *.pdf  filter=lfs diff=lfs merge=lfs -text
 *.dll  filter=lfs diff=lfs merge=lfs -text

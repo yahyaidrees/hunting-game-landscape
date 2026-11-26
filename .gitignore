@@ -58,7 +58,21 @@ crashlytics-build.properties
 *.jks
 *.p12
 google-services.json
+google-services.json.meta
 GoogleService-Info.plist
+# Firebase writes copies of the google-services.json keys into these (generated, never commit)
+google-services-desktop.json
+google-services-desktop.json.meta
+google-services.xml
+Assets/Plugins/Android/FirebaseApp.androidlib/
+Assets/Plugins/Android/FirebaseApp.androidlib.meta
+Assets/Plugins/Android/FirebaseCrashlytics.androidlib/
+Assets/Plugins/Android/FirebaseCrashlytics.androidlib.meta
+# EDM4U copies the Firebase Android libraries out of the packages on every resolve
+Assets/GeneratedLocalRepo/
+Assets/GeneratedLocalRepo.meta
+# StreamingAssets only holds the generated desktop copy of the Firebase keys so far
+Assets/StreamingAssets.meta
 *.env
 secrets/
 
