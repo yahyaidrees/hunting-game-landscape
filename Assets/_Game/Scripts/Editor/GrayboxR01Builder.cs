@@ -335,7 +335,7 @@ namespace Game.Editor
 
                 // Bottom centre: noise meter.
                 var meter = NewRect("NoiseMeter", safe);
-                Anchor(meter, new Vector2(0.5f, 0f), new Vector2(0f, 64f), new Vector2(480f, 46f));
+                Anchor(meter, new Vector2(0.5f, 0f), new Vector2(0f, 64f), new Vector2(400f, 46f));   // clear of Reload at the largest button size
                 var mBg = meter.gameObject.AddComponent<Image>();
                 mBg.color = new Color(forest.r, forest.g, forest.b, 0.75f); mBg.raycastTarget = false;
                 var fill = NewRect("Fill", meter);
@@ -362,7 +362,9 @@ namespace Game.Editor
                 AddTrackingHud(safe, font, knob, parchment, forest);
                 AddWindHud(safe, font, parchment, forest);
                 AddWeaponHud((RectTransform)root.transform, safe, font, knob, weapons.scopeMask, parchment, forest);
-                AddHuntFlowHud((RectTransform)root.transform, font, parchment, forest);   // last: the cards draw on top
+                AddHuntFlowHud((RectTransform)root.transform, font, parchment, forest);   // the cards draw over the HUD
+                AddSettingsHud((RectTransform)root.transform, safe, font, knob, parchment, forest);   // last: the pause panel draws over the cards
+                AddHudLayout(safe);   // after every SafeArea child exists: left-handed mirror and button size
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, HudPrefab);
                 log.AppendLine("saved " + HudPrefab);
@@ -489,6 +491,7 @@ namespace Game.Editor
             BakeScatterCover(root.transform, spawn + rot * new Vector3(-12f, 0f, 14f), EnsureCoverRules(surfaces, log), log);
             BuildAnimalScene(root.transform, spawn, rot, animals, log);
             BuildHuntSession(root.transform, player, log);   // after cover: the navigation mesh avoids it
+            AddQualityTiers(root.transform, log);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

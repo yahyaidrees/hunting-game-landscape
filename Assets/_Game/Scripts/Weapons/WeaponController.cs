@@ -1,6 +1,7 @@
 using System;
 using Game.Core.Combat;
 using Game.Core.Noise;
+using Game.Core.Settings;
 using Game.Player;
 using UnityEngine;
 
@@ -95,7 +96,7 @@ namespace Game.Weapons
             scopeAmount = Mathf.MoveTowards(scopeAmount, target, dt / Mathf.Max(0.01f, weapon.scopeInSeconds));
             float s = Mathf.SmoothStep(0f, 1f, scopeAmount);
             viewCamera.fieldOfView = Mathf.Lerp(weapon.hipFieldOfView, weapon.scopeFieldOfView, s);
-            controller.LookScale = viewCamera.fieldOfView / weapon.hipFieldOfView;
+            controller.LookScale = viewCamera.fieldOfView / weapon.hipFieldOfView * Mathf.Lerp(1f, GameSettings.ScopeSensitivity, s);
 
             // heavy breathing after moving fades over a few seconds
             exertion = Mathf.MoveTowards(exertion, Mathf.Max(exertion, controller.SpeedFraction), dt * 2f);

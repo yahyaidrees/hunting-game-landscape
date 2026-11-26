@@ -312,6 +312,7 @@ namespace Game.Editor
                 lod.RecalculateBounds();
 
                 AddBoneHitboxes(model.transform);
+                AddBlobShadow(root.transform, new Vector2(0.75f, 1.7f), log);   // Low tier only (no real-time shadows there)
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, RealWolfPrefabPath);
                 int lod0 = Set("Wolf Body_LOD0", "Wolf Fur_LOD0", "Wolf Claws", "Wolf Eyes", "Wolf Mouth", "Wolf Wiskers").Sum(r => ((SkinnedMeshRenderer)r).sharedMesh.triangles.Length / 3);

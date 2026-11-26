@@ -1,7 +1,9 @@
 {
     "name": "Game.Environment",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "Game.Core"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

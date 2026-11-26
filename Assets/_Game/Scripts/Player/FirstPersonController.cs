@@ -1,4 +1,5 @@
 using System;
+using Game.Core.Settings;
 using Game.Core.Surfaces;
 using UnityEngine;
 
@@ -51,7 +52,7 @@ namespace Game.Player
 
         /// <summary>Extra view rotation in degrees (x yaw, y pitch up) on top of where the hunter looks: weapon sway and recoil.</summary>
         public Vector2 AimOffset { get; set; }
-        /// <summary>Look sensitivity multiplier (the weapon lowers it while zoomed in through the scope).</summary>
+        /// <summary>Look speed multiplier from the weapon (lower while zoomed in), on top of the player's sensitivity setting.</summary>
         public float LookScale { get; set; } = 1f;
         /// <summary>Raised when an animal knocks the hunter down (direction it came from).</summary>
         public event Action<Vector3> Attacked;
@@ -88,7 +89,8 @@ namespace Game.Player
         void UpdateLook(float dt)
         {
             float perPixel = settings.dragDegreesPerScreenHeight / Mathf.Max(1, Screen.height);
-            Vector2 delta = (input.LookDrag * perPixel + input.LookStick * (settings.stickDegreesPerSecond * dt)) * LookScale;
+            Vector2 delta = (input.LookDrag * perPixel + input.LookStick * (settings.stickDegreesPerSecond * dt)) * (LookScale * GameSettings.LookSensitivity);
+            if (GameSettings.InvertLook) delta.y = -delta.y;
             yaw += delta.x;
             pitch = Mathf.Clamp(pitch - delta.y, settings.minPitch, settings.maxPitch);
             transform.rotation = Quaternion.Euler(0f, yaw, 0f);

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0bb8f5009b03ff4eaebf736f4bbb7b6, type: 3}
+  m_Name: QualityTiers
+  m_EditorClassIdentifier: Game.Core::Game.Core.Settings.QualityTierSet
+  low:
+    pipeline: {fileID: 11400000, guid: 2ca50689732c91f468404d5787cfdea7, type: 2}
+    frameRate: 30
+    textureMipLimit: 1
+    detailDensity: 0.3
+    lodBias: 0.7
+    bloom: 0
+  medium:
+    pipeline: {fileID: 11400000, guid: 54bb478671ff67c4cb8de67e95f455c7, type: 2}
+    frameRate: 30
+    textureMipLimit: 0
+    detailDensity: 0.6
+    lodBias: 0.85
+    bloom: 1
+  high:
+    pipeline: {fileID: 11400000, guid: feb869d3dc03cc648af1df4a58f27db4, type: 2}
+    frameRate: 60
+    textureMipLimit: 0
+    detailDensity: 1
+    lodBias: 1
+    bloom: 1

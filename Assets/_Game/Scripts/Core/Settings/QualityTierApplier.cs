@@ -1,0 +1,101 @@
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+
+namespace Game.Core.Settings
+{
+    /// <summary>
+    /// Applies the graphics tier from GameSettings (Auto or the player's choice) and re-applies it whenever the
+    /// settings change: the tier's pipeline asset (render scale, shadows), texture size, level-of-detail distance,
+    /// detail density, bloom and the frame rate cap. One per scene for now; it moves to the Boot scene later.
+    /// In the editor, everything it changed is put back when Play mode ends, so ProjectSettings stay untouched.
+    /// </summary>
+    [DefaultExecutionOrder(-100)]
+    public sealed class QualityTierApplier : MonoBehaviour
+    {
+        [SerializeField] QualityTierSet tiers;
+
+        QualityTierSet.Tier applied;
+        int appliedFps = -1;
+
+#if UNITY_EDITOR
+        static bool savedOriginals;
+        static RenderPipelineAsset originalPipeline;
+        static int originalMipLimit, originalFps;
+        static float originalLodBias;
+
+        static void SaveEditorOriginals()
+        {
+            if (savedOriginals) return;
+            savedOriginals = true;
+            originalPipeline = QualitySettings.renderPipeline;
+            originalMipLimit = QualitySettings.globalTextureMipmapLimit;
+            originalLodBias = QualitySettings.lodBias;
+            originalFps = Application.targetFrameRate;
+            Application.quitting += RestoreEditorOriginals;   // fires when Play mode ends
+        }
+
+        static void RestoreEditorOriginals()
+        {
+            Application.quitting -= RestoreEditorOriginals;
+            if (!savedOriginals) return;
+            savedOriginals = false;
+            if (QualitySettings.renderPipeline != originalPipeline) QualitySettings.renderPipeline = originalPipeline;
+            QualitySettings.globalTextureMipmapLimit = originalMipLimit;
+            QualitySettings.lodBias = originalLodBias;
+            Application.targetFrameRate = originalFps;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => savedOriginals = false;
+#endif
+
+        void OnEnable()
+        {
+            GameSettings.Changed += Apply;
+            Apply();
+        }
+
+        void OnDisable() => GameSettings.Changed -= Apply;
+
+        void Apply()
+        {
+            if (!tiers) return;
+            var tier = GameSettings.Tier;
+            var t = tiers.Get(tier);
+            int fps = GameSettings.FrameRateChoice > 0 ? GameSettings.FrameRateChoice : t.frameRate;
+            if (t == applied && fps == appliedFps) return;
+#if UNITY_EDITOR
+            SaveEditorOriginals();
+#endif
+            if (t != applied)
+            {
+                // each of these is costly to change (pipeline rebuild, texture re-upload), so only on a real change
+                if (t.pipeline && QualitySettings.renderPipeline != t.pipeline) QualitySettings.renderPipeline = t.pipeline;
+                if (QualitySettings.globalTextureMipmapLimit != t.textureMipLimit) QualitySettings.globalTextureMipmapLimit = t.textureMipLimit;
+                QualitySettings.lodBias = t.lodBias;
+                QualityTiers.DetailDensity = t.detailDensity;
+                SetBloom(t.bloom);
+                applied = t;
+            }
+#if !UNITY_EDITOR
+            QualitySettings.vSyncCount = 0;   // phones ignore vSync; targetFrameRate is the cap
+#endif
+            Application.targetFrameRate = fps;
+            appliedFps = fps;
+            QualityTiers.Current = tier;
+            QualityTiers.HasApplied = true;
+            QualityTiers.RaiseApplied();
+        }
+
+        // Volume.profile makes a scene-only copy of the shared profile, so the asset on disk never changes.
+        static void SetBloom(bool on)
+        {
+            foreach (var volume in FindObjectsByType<Volume>(FindObjectsSortMode.None))
+            {
+                if (!volume.sharedProfile || !volume.sharedProfile.Has<Bloom>()) continue;
+                if (volume.profile.TryGet<Bloom>(out var bloom)) bloom.active = on;
+            }
+        }
+    }
+}

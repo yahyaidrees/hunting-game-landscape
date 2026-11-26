@@ -90,6 +90,8 @@ public class FarmScatterRenderer : MonoBehaviour
         float distanceScale = (ignoreQualityLodBias ? 1f : QualitySettings.lodBias) * zoom;
         int quality = QualitySettings.GetQualityLevel();
         float detailDensity = quality < detailDensityByQuality.Length ? detailDensityByQuality[quality] : 1f;
+        // the game's graphics tier (Game.Core QualityTierApplier) overrides the per-level table once it has run
+        if (Application.isPlaying && Game.Core.Settings.QualityTiers.DetailDensity > 0f) detailDensity = Game.Core.Settings.QualityTiers.DetailDensity;
 
         for (int c = 0; c < cellMatrices.Length; c++)
         {

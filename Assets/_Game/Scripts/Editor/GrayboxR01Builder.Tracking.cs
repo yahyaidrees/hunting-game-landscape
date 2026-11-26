@@ -314,7 +314,7 @@ namespace Game.Editor
 
             // Top right: hunter's map button and panel (the panel is last, so it draws over everything).
             var mapButtonRect = NewRect("MapButton", safe);
-            Anchor(mapButtonRect, new Vector2(1f, 1f), new Vector2(-120f, -70f), new Vector2(180f, 80f));
+            Anchor(mapButtonRect, new Vector2(1f, 1f), new Vector2(-215f, -70f), new Vector2(180f, 80f));   // pause sits to its right
             var mapBtnImg = mapButtonRect.gameObject.AddComponent<Image>();
             mapBtnImg.color = new Color(forest.r, forest.g, forest.b, 0.85f);
             var mapButton = mapButtonRect.gameObject.AddComponent<Button>(); mapButton.targetGraphic = mapBtnImg;
