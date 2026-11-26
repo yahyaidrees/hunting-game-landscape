@@ -40,6 +40,12 @@ namespace Game.Tracking
         public float footprintDrawDistance = 45f;
         [Tooltip("Ground clearer than this (0..1 track clarity) holds no visible print.")]
         [Range(0f, 1f)] public float minTrackClarity = 0.05f;
+        [Tooltip("Prints animals leave while the hunt runs (their own pool, so they never erase the trail).")]
+        public int livePrintPoolSize = 192;
+        [Tooltip("A print within this angle of the view centre (and within the print range) shows the Inspect button.")]
+        public float printAimAngle = 8f;
+        [Tooltip("How close the hunter must be to read a print (metres).")]
+        public float printRange = 3.2f;
 
         [Header("Visuals")]
         [Tooltip("Decal material of the glow ring under a clue.")]

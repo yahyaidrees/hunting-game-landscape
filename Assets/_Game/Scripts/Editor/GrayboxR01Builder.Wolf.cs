@@ -313,6 +313,10 @@ namespace Game.Editor
 
                 AddBoneHitboxes(model.transform);
                 AddBlobShadow(root.transform, new Vector2(0.75f, 1.7f), log);   // Low tier only (no real-time shadows there)
+                // live prints wherever it walks or runs during the hunt (the hunter can read any of them)
+                var wolfTracks = AssetDatabase.LoadAssetAtPath<Game.Tracking.SpeciesTrackDefinition>(TrackingDataDir + "/Tracks_Wolf.asset");
+                if (wolfTracks) SetRefs(root.AddComponent<Game.Tracking.TrackMaker>(), ("species", wolfTracks));
+                else log.AppendLine("WARNING: Tracks_Wolf.asset not found; the wolf leaves no live prints");
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, RealWolfPrefabPath);
                 int lod0 = Set("Wolf Body_LOD0", "Wolf Fur_LOD0", "Wolf Claws", "Wolf Eyes", "Wolf Mouth", "Wolf Wiskers").Sum(r => ((SkinnedMeshRenderer)r).sharedMesh.triangles.Length / 3);

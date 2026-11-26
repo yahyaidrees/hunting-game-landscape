@@ -18,7 +18,7 @@ namespace Game.Tracking
         public List<Vector3> points = new List<Vector3>();
 
         readonly List<Clue> clues = new List<Clue>();
-        readonly RaycastHit[] hits = new RaycastHit[8];
+        readonly RaycastHit[] hits = new RaycastHit[16];
         float[] cumulative = new float[0];
 
         public IReadOnlyList<Clue> Clues => clues;
@@ -66,29 +66,20 @@ namespace Game.Tracking
                 Sample(d, out Vector3 pos, out Vector3 dir);
                 left = !left;
                 Vector3 side = Vector3.Cross(Vector3.up, dir).normalized * (left ? -species.trackHalfWidth : species.trackHalfWidth);
-                if (!GroundAt(pos + side, out RaycastHit hit)) continue;
+                if (!TrackGround.Find(pos + side, hits, out RaycastHit hit)) continue;
 
                 var surface = SurfaceQuery.Resolve(hit.collider, hit.point);
                 float clarity = surface ? surface.trackClarity : 0.5f;
                 if (clarity < s.minTrackClarity) continue;   // rock and water: the trail breaks, the hunter must search
 
-                pool.Place(hit.point, hit.normal, dir, species.printSize, material, opacity * Mathf.Sqrt(clarity));
+                var record = new Footprint
+                {
+                    position = hit.point, direction = dir, species = species, trail = this, pathDistance = d,
+                    step = species.walkStep, ageHours = ageHours,
+                };
+                pool.Place(hit.point, hit.normal, dir, species.printSize, material, opacity * Mathf.Sqrt(clarity), record);
                 PrintsLaid++;
             }
-        }
-
-        // Nearest ground below the point, ignoring characters (the player's capsule may stand near the trail).
-        bool GroundAt(Vector3 p, out RaycastHit ground)
-        {
-            ground = default;
-            int n = Physics.RaycastNonAlloc(p + Vector3.up * 20f, Vector3.down, hits, 40f, ~0, QueryTriggerInteraction.Ignore);
-            float best = float.MaxValue;
-            for (int i = 0; i < n; i++)
-            {
-                if (hits[i].collider is CharacterController) continue;
-                if (hits[i].distance < best) { best = hits[i].distance; ground = hits[i]; }
-            }
-            return best < float.MaxValue;
         }
 
         /// <summary>Point and travel direction at a distance along the path (flattened to the horizontal).</summary>

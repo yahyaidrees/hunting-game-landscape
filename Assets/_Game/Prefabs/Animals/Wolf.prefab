@@ -293,6 +293,7 @@ GameObject:
   - component: {fileID: 6127290749927568330}
   - component: {fileID: 3978019978071159039}
   - component: {fileID: 675602867424260441}
+  - component: {fileID: 1822283418148643073}
   m_Layer: 0
   m_Name: Wolf
   m_TagString: Untagged
@@ -509,6 +510,21 @@ MonoBehaviour:
   onLow: 1
   onMedium: 0
   onHigh: 0
+--- !u!114 &1822283418148643073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4181446368429425081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e84c586218d30c49aec9c1956ed6c15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Game.Tracking::Game.Tracking.TrackMaker
+  species: {fileID: 11400000, guid: 7fcfde2dbb9a5174cb4f9e200cc29a3d, type: 2}
+  runSpeed: 3
+  runStepMultiplier: 2.6
 --- !u!1 &4506888090795031911
 GameObject:
   m_ObjectHideFlags: 0

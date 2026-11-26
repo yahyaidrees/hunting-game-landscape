@@ -49,7 +49,7 @@ namespace Game.Hunt
             tracking = TrackingSystem.Active ? TrackingSystem.Active : FindFirstObjectByType<TrackingSystem>();
             weapon = FindFirstObjectByType<WeaponController>();
             session.StageChanged += OnStage;
-            if (tracking) tracking.ClueDiscovered += OnClue;
+            if (tracking) { tracking.ClueDiscovered += OnClue; tracking.PrintRead += OnPrint; }
             if (weapon) weapon.Fired += OnFired;
             AnimalHealth.AnyHit += OnAnimalHit;
             AlarmEvents.Raised += OnAlarm;
@@ -58,7 +58,7 @@ namespace Game.Hunt
         void OnDestroy()
         {
             if (session) session.StageChanged -= OnStage;
-            if (tracking) tracking.ClueDiscovered -= OnClue;
+            if (tracking) { tracking.ClueDiscovered -= OnClue; tracking.PrintRead -= OnPrint; }
             if (weapon) weapon.Fired -= OnFired;
             AnimalHealth.AnyHit -= OnAnimalHit;
             AlarmEvents.Raised -= OnAlarm;
@@ -111,6 +111,15 @@ namespace Game.Hunt
             Say(script.FirstSign(clue.kind), urgent: true);
             bool onTrail = clue.kind != ClueKind.ClawMarks && clue.kind != ClueKind.DragMarks;
             if (onTrail) Say(script.mapHint);
+        }
+
+        // any print read counts as progress; the first print gets the footprint lesson, whether a clue or not
+        void OnPrint(Footprint print)
+        {
+            lastProgressAt = Time.time;
+            Say(script.FirstSign(ClueKind.Footprint), urgent: true);
+            if (print.running) Say(script.runningPrint, urgent: true);
+            else if (print.IsLive) Say(script.livePrint, urgent: true);
         }
 
         void OnFired(ShotResult shot)

@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using Game.Core.Analytics;
+using Game.Core.Surfaces;
 using UnityEngine;
 
 namespace Game.Tracking
 {
     /// <summary>
     /// Runs tracking in a hunt scene: builds every trail's footprints at start, keeps the list of clues, makes nearby
-    /// clues glow (the stage 1 assist), runs Hunter Sense and counts what the hunter has found.
+    /// clues glow (the stage 1 assist), runs Hunter Sense and counts what the hunter has found. Also keeps every print
+    /// on the ground readable: the trail's prints and the live ones animals leave as they move.
     /// </summary>
     [DefaultExecutionOrder(-20)]
     public sealed class TrackingSystem : MonoBehaviour
@@ -18,7 +21,8 @@ namespace Game.Tracking
 
         readonly List<Trail> trails = new List<Trail>();
         readonly List<Clue> clues = new List<Clue>();
-        FootprintPool pool;
+        FootprintPool pool, livePool;
+        readonly RaycastHit[] hits = new RaycastHit[16];
         float senseReadyAt;
 
         public static TrackingSystem Active { get; private set; }
@@ -35,6 +39,9 @@ namespace Game.Tracking
         public event Action<Clue> ClueDiscovered;
         /// <summary>Raised when Hunter Sense is used: the clue it found, or null if none was in range.</summary>
         public event Action<Clue> SenseUsed;
+        /// <summary>Raised when the hunter reads a print (any print, not only clue prints).</summary>
+        public event Action<Footprint> PrintRead;
+        public int PrintsRead { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => Active = null;
@@ -56,6 +63,9 @@ namespace Game.Tracking
             pool = new GameObject("FootprintPool").AddComponent<FootprintPool>();
             pool.transform.SetParent(transform, false);
             pool.Init(settings.footprintPoolSize, settings.footprintDrawDistance);
+            livePool = new GameObject("LivePrintPool").AddComponent<FootprintPool>();
+            livePool.transform.SetParent(transform, false);
+            livePool.Init(Mathf.Max(16, settings.livePrintPoolSize), settings.footprintDrawDistance);
 
             trails.Clear();
             trails.AddRange(FindObjectsByType<Trail>(FindObjectsSortMode.None));
@@ -110,6 +120,98 @@ namespace Game.Tracking
             SenseUsed?.Invoke(best);
             return true;
         }
+
+        // ---------- prints ----------
+
+        /// <summary>
+        /// An animal's foot came down here just now (TrackMaker). Lays a fresh print if the ground holds one.
+        /// </summary>
+        public void AddLivePrint(SpeciesTrackDefinition species, Vector3 position, Vector3 direction, float step, bool running)
+        {
+            if (!livePool || !species || !species.freshPrintMaterial) return;
+            if (!TrackGround.Find(position, hits, out RaycastHit hit)) return;
+            var surface = SurfaceQuery.Resolve(hit.collider, hit.point);
+            float clarity = surface ? surface.trackClarity : 0.5f;
+            if (clarity < settings.minTrackClarity) return;
+            direction.y = 0f;
+            var record = new Footprint
+            {
+                position = hit.point, direction = direction.normalized, species = species,
+                step = step, running = running, madeAt = Time.time,
+            };
+            livePool.Place(hit.point, hit.normal, direction, species.printSize, species.freshPrintMaterial, Mathf.Sqrt(clarity), record);
+        }
+
+        IEnumerable<Footprint> AllPrints()
+        {
+            foreach (var p in new[] { pool, livePool })
+            {
+                if (!p || p.Records == null) continue;
+                foreach (var r in p.Records) if (r != null) yield return r;
+            }
+        }
+
+        /// <summary>The unread print nearest the view centre, within the print range and aim angle, or null.</summary>
+        public Footprint FindAimedPrint(Vector3 body, Vector3 eye, Vector3 forward)
+        {
+            Footprint best = null;
+            float bestAngle = settings.printAimAngle, r2 = settings.printRange * settings.printRange;
+            foreach (var f in AllPrints())
+            {
+                if (f.read || (f.position - body).sqrMagnitude > r2) continue;
+                float angle = Vector3.Angle(forward, f.position - eye);
+                if (angle < bestAngle) { bestAngle = angle; best = f; }
+            }
+            return best;
+        }
+
+        /// <summary>The print nearest a tap on screen, within the tap radius and print range, or null.</summary>
+        public Footprint FindTappedPrint(Camera cam, Vector2 screenPosition, Vector3 body, float radiusPixels)
+        {
+            Footprint best = null;
+            float bestPx = radiusPixels * radiusPixels, r2 = settings.printRange * settings.printRange;
+            foreach (var f in AllPrints())
+            {
+                if ((f.position - body).sqrMagnitude > r2) continue;
+                Vector3 sp = cam.WorldToScreenPoint(f.position);
+                if (sp.z <= 0f) continue;
+                float d = ((Vector2)sp - screenPosition).sqrMagnitude;
+                if (d < bestPx) { bestPx = d; best = f; }
+            }
+            return best;
+        }
+
+        /// <summary>The hunter read a print: on a trail it draws the trail on the map up to it, like a clue.</summary>
+        public void ReadPrint(Footprint print)
+        {
+            if (print == null) return;
+            bool first = !print.read;
+            print.read = true;
+            if (print.trail) print.trail.Reveal(print.pathDistance);
+            if (first)
+            {
+                PrintsRead++;
+                AnalyticsEvents.Log("print_read", ("live", print.IsLive), ("running", print.running), ("count", PrintsRead));
+            }
+            PrintRead?.Invoke(print);
+        }
+
+        /// <summary>Card text for a print: title, freshness and what it tells (direction, pace, the species).</summary>
+        public void DescribePrint(Footprint print, out string title, out string freshness, out string body)
+        {
+            var species = print.species;
+            title = species ? $"{species.displayName} footprint" : "Footprint";
+            freshness = print.IsLive ? "Very fresh: made minutes ago. It was here just now."
+                                     : FreshnessUtil.Label(FreshnessUtil.Of(print.AgeHours, settings));
+            int stepCm = Mathf.RoundToInt(print.step * 20f) * 5;   // to the nearest 5 cm
+            string heading = $"Heading {Compass(print.direction)}";
+            body = print.running
+                ? $"{heading} at a run: prints about {stepCm} cm apart, far more than a walking step. Something made it run."
+                : $"{heading} at a walk: steps about {stepCm} cm apart. A running animal leaves them two or three times farther apart.";
+            if (species && !string.IsNullOrEmpty(species.printHint)) body += "\n" + species.printHint;
+        }
+
+        // ---------- clues ----------
 
         /// <summary>Clue card text: title ("Wolf footprint"), freshness line and the explanation.</summary>
         public void Describe(Clue clue, out string title, out string freshness, out string body)

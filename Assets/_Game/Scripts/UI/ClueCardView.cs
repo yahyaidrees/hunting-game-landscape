@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace Game.UI
 {
     /// <summary>
-    /// The card that opens when a clue is inspected: what it is, how fresh it is, and what it teaches.
+    /// The card that opens when a clue or a print is inspected: what it is, how fresh it is, and what it teaches.
     /// Closes with its button or when the hunter walks away.
     /// </summary>
     public sealed class ClueCardView : MonoBehaviour
@@ -19,7 +19,8 @@ namespace Game.UI
         [SerializeField] float closeWhenBeyondRange = 3f;
 
         ClueInteractor interactor;
-        Clue shown;
+        bool showing;
+        Vector3 shownAt;
 
         void Awake()
         {
@@ -32,17 +33,17 @@ namespace Game.UI
             if (!interactor)
             {
                 interactor = FindFirstObjectByType<ClueInteractor>();
-                if (interactor) interactor.Inspected += Show;
+                if (interactor) { interactor.Inspected += Show; interactor.PrintInspected += ShowPrint; }
             }
             var sys = TrackingSystem.Active;
-            if (shown && sys && interactor &&
-                Vector3.Distance(shown.Position, interactor.transform.position) > sys.Settings.inspectRange + closeWhenBeyondRange)
+            if (showing && sys && interactor &&
+                Vector3.Distance(shownAt, interactor.transform.position) > sys.Settings.inspectRange + closeWhenBeyondRange)
                 Hide();
         }
 
         void OnDestroy()
         {
-            if (interactor) interactor.Inspected -= Show;
+            if (interactor) { interactor.Inspected -= Show; interactor.PrintInspected -= ShowPrint; }
         }
 
         void Show(Clue clue)
@@ -50,16 +51,30 @@ namespace Game.UI
             var sys = TrackingSystem.Active;
             if (!sys) return;
             sys.Describe(clue, out string t, out string f, out string b);
+            Open(t, f, b, clue.Position);
+        }
+
+        void ShowPrint(Footprint print)
+        {
+            var sys = TrackingSystem.Active;
+            if (!sys) return;
+            sys.DescribePrint(print, out string t, out string f, out string b);
+            Open(t, f, b, print.position);
+        }
+
+        void Open(string t, string f, string b, Vector3 at)
+        {
             title.text = t;
             freshness.text = f;
             body.text = b;
-            shown = clue;
+            showing = true;
+            shownAt = at;
             panel.SetActive(true);
         }
 
         void Hide()
         {
-            shown = null;
+            showing = false;
             panel.SetActive(false);
         }
     }

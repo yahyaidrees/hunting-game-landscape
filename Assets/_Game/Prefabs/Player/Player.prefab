@@ -801,6 +801,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Game.Tracking::Game.Tracking.ClueInteractor
   viewCamera: {fileID: 7313426091726567196}
+  printMarkerSize: 0.38
 --- !u!114 &3350318206797243350
 MonoBehaviour:
   m_ObjectHideFlags: 0

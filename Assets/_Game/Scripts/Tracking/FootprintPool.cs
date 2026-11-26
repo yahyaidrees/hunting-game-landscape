@@ -5,11 +5,12 @@ namespace Game.Tracking
 {
     /// <summary>
     /// A fixed set of decal projectors reused for every footprint (plan section 17: pooled footprint decals).
-    /// When the pool runs out the oldest print is reused.
+    /// When the pool runs out the oldest print is reused. Each slot also holds the print's reading (a Footprint).
     /// </summary>
     public sealed class FootprintPool : MonoBehaviour
     {
         DecalProjector[] items;
+        Footprint[] records;
         int next;
 
         public int Capacity => items?.Length ?? 0;
@@ -18,6 +19,7 @@ namespace Game.Tracking
         public void Init(int size, float drawDistance)
         {
             items = new DecalProjector[Mathf.Max(1, size)];
+            records = new Footprint[items.Length];
             for (int i = 0; i < items.Length; i++)
             {
                 var go = new GameObject("Print");
@@ -32,9 +34,10 @@ namespace Game.Tracking
         }
 
         /// <summary>Places a print on the ground at <paramref name="position"/>, its top pointing along <paramref name="forward"/>.</summary>
-        public DecalProjector Place(Vector3 position, Vector3 normal, Vector3 forward, Vector2 size, Material material, float opacity)
+        public DecalProjector Place(Vector3 position, Vector3 normal, Vector3 forward, Vector2 size, Material material, float opacity, Footprint record = null)
         {
             var p = items[next];
+            records[next] = record;
             next = (next + 1) % items.Length;
             Used = Mathf.Min(Used + 1, items.Length);
 
@@ -49,10 +52,14 @@ namespace Game.Tracking
             return p;
         }
 
+        /// <summary>The readings of the prints on the ground (null slots are empty or have no reading).</summary>
+        public Footprint[] Records => records;
+
         public void ClearAll()
         {
             if (items == null) return;
             foreach (var p in items) p.gameObject.SetActive(false);
+            System.Array.Clear(records, 0, records.Length);
             next = 0;
             Used = 0;
         }

@@ -53,6 +53,12 @@ namespace Game.Hunt
             new SignLine { kind = ClueKind.BloodTrail, line = new MentorLine("Blood. Fresh drops mean it's close. Watch the bushes ahead.") },
         };
 
+        [Header("Reading prints (said once each)")]
+        [Tooltip("The first print read that the animal left while running.")]
+        public MentorLine runningPrint = new MentorLine("See how far apart these are? It was running here. Something scared it.");
+        [Tooltip("The first print read that the animal left minutes ago.")]
+        public MentorLine livePrint = new MentorLine("These are sharp, not a grain fallen in. It was here minutes ago. Slow down, and check the wind.");
+
         [Header("Help")]
         [Tooltip("Said once, after the first sign on the trail itself.")]
         public MentorLine mapHint = new MentorLine("Open the map now and then. Every sign you read draws more of the trail.");
