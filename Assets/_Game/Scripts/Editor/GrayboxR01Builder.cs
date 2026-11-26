@@ -485,6 +485,7 @@ namespace Game.Editor
             Physics.SyncTransforms();
             BuildTrackingScene(root.transform, spawn, rot, tracking, log);
             BuildDressing(spawn, rot, log);   // trees, shrubs, flowers, mossy rocks: before cover, so they get cover too
+            BuildDistance(log);               // far snowy range, ridges fading to blue, valley mist
             BakeScatterCover(root.transform, spawn + rot * new Vector3(-12f, 0f, 14f), EnsureCoverRules(surfaces, log), log);
             BuildAnimalScene(root.transform, spawn, rot, animals, log);
             BuildHuntSession(root.transform, player, log);   // after cover: the navigation mesh avoids it
