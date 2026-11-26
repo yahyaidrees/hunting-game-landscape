@@ -5,11 +5,13 @@ namespace Game.Core.Noise
 {
     public enum NoiseKind
     {
-        Gunshot
+        Gunshot,
+        /// <summary>Birds bursting from cover because of the hunter: animals look that way and grow wary, but do not bolt.</summary>
+        BirdAlarm,
     }
 
     /// <summary>
-    /// One-off loud noises (a gunshot) that animals react to at once, separate from the hunter's continuous
+    /// One-off loud noises (a gunshot, birds the hunter flushed) that animals react to at once, separate from the hunter's continuous
     /// footstep noise (PlayerNoise).
     /// </summary>
     public static class NoiseEvents

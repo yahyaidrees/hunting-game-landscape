@@ -44,9 +44,15 @@ namespace Game.Animals
         void OnLoudNoise(Vector3 position, float radius, Game.Core.Noise.NoiseKind kind)
         {
             if ((position - transform.position).sqrMagnitude > radius * radius) return;
-            Suspicion = 1f;
             LastStimulus = Stimulus.Sound;
             LastStimulusPosition = position;
+            if (kind == Game.Core.Noise.NoiseKind.BirdAlarm)
+            {
+                // flushed birds put it on alert (it stops and listens toward them), they do not make it run
+                Suspicion = Mathf.Max(Suspicion, Mathf.Min(0.95f, settings.alertThreshold + 0.25f));
+                return;
+            }
+            Suspicion = 1f;
             HeardLoudNoise?.Invoke(position);
         }
 

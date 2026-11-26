@@ -10,6 +10,8 @@ namespace Game.Animals
     public sealed class AnimalBehaviourSettings : ScriptableObject
     {
         public string displayName = "Wolf";
+        [Tooltip("Birds (and later monkeys and deer) give alarm calls when it moves near them: true for predators.")]
+        public bool causesAlarmCalls = true;
 
         [Header("Movement")]
         public float walkSpeed = 1.4f;

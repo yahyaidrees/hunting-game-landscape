@@ -161,6 +161,65 @@ namespace Game.Editor
             return Normalize(x, 0.8f);
         }
 
+        // CLU-01: a flock of small birds bursting out of a bush: a dozen sets of wingbeats starting together and
+        // fading as they fly off, with scattered alarm chirps on top.
+        public static float[] BirdFlush(int seed)
+        {
+            var rng = new System.Random(seed * 7919 + 11);
+            int n = (int)(Rate * 2.6f);
+            var x = new float[n];
+            int birds = 9 + rng.Next(5);
+            for (int b = 0; b < birds; b++)
+            {
+                int start = (int)(Rate * rng.NextDouble() * 0.35);
+                float flapHz = 13f + (float)rng.NextDouble() * 7f, phase = (float)rng.NextDouble() * 6.28f;
+                float fade = 0.5f + (float)rng.NextDouble() * 0.6f, gain = 0.5f + (float)rng.NextDouble() * 0.5f;
+                int len = n - start;
+                var w = Noise(len, rng); HighPass(w, 0.2f); LowPass(w, 0.3f);
+                for (int i = 0; i < len; i++)
+                {
+                    float t = i / (float)Rate;
+                    float flap = Mathf.Pow(Mathf.Max(0f, Mathf.Sin(2f * Mathf.PI * flapHz * t + phase)), 3f);
+                    w[i] *= flap * gain * Mathf.Exp(-t / fade) * (1f - Mathf.Exp(-t / 0.01f));
+                }
+                Mix(x, w, 1f, start);
+            }
+            int chirps = 8 + rng.Next(7);
+            for (int c = 0; c < chirps; c++)
+            {
+                float secs = 0.05f + (float)rng.NextDouble() * 0.04f;
+                float f0 = 4200f + (float)rng.NextDouble() * 2000f, f1 = f0 * (0.6f + (float)rng.NextDouble() * 0.2f);
+                var ch = Sweep((int)(Rate * secs), f0, f1, secs);
+                Env(ch, 0.004f, secs * 0.4f);
+                float when = (float)rng.NextDouble() * 1.9f;
+                Mix(x, ch, (0.25f + (float)rng.NextDouble() * 0.35f) * Mathf.Exp(-when / 1.2f), (int)(Rate * when));
+            }
+            return Normalize(x, 0.8f);
+        }
+
+        // CLU-02: one bird's sharp, repeated alarm: a quick run of hard "chak" notes.
+        public static float[] BirdScold(int seed)
+        {
+            var rng = new System.Random(seed * 104729 + 3);
+            int n = (int)(Rate * 1.3f);
+            var x = new float[n];
+            int notes = 4 + rng.Next(3);
+            float t0 = 0.02f, pitch = 0.9f + (float)rng.NextDouble() * 0.2f;
+            for (int k = 0; k < notes; k++)
+            {
+                const float secs = 0.05f;
+                var note = Sweep((int)(Rate * secs), 4800f * pitch, 3000f * pitch, secs);
+                var over = Sweep((int)(Rate * secs), 9600f * pitch, 6000f * pitch, secs);
+                Mix(note, over, 0.3f);
+                var grit = Noise(note.Length, rng); HighPass(grit, 0.5f);
+                Mix(note, grit, 0.25f);
+                Env(note, 0.002f, 0.018f);
+                Mix(x, note, 1f - k * 0.06f, (int)(Rate * t0));
+                t0 += 0.11f + (float)rng.NextDouble() * 0.04f;
+            }
+            return Normalize(x, 0.8f);
+        }
+
         // ---------- building blocks ----------
 
         static float[] Noise(int n, System.Random rng)

@@ -63,6 +63,14 @@ namespace Game.Hunt
         [Tooltip("Said the first time the hunter raises the scope while stalking.")]
         public MentorLine firstScope = new MentorLine("Easy. Breathe out, hold it, then squeeze.");
 
+        [Header("Alarm calls (said once each)")]
+        [Tooltip("The first time birds burst out because of a predator.")]
+        public MentorLine alarmPredator = new MentorLine("Hear that? Birds don't burst out of a bush for nothing. Something is moving over there.");
+        [Tooltip("The first time the hunter flushes birds.")]
+        public MentorLine alarmHunter = new MentorLine("Careful. When birds go up, every animal nearby knows where you are. Crouch near bushes.");
+        [Tooltip("The first time a bird scolds from a tree.")]
+        public MentorLine alarmScold = new MentorLine("That bird is scolding something on the ground. Could be our wolf. Note where it is.");
+
         [Header("After a shot")]
         public MentorLine miss = new MentorLine("Missed. Don't chase it. Breathe, and wait for a clear shot.");
         public MentorLine wounded = new MentorLine("Hit, but not clean. Aim just behind the shoulder next time: heart and lungs.");

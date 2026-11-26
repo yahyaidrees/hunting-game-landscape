@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Game.Animals;
+using Game.Core.Alarms;
 using Game.Core.Audio;
 using Game.Tracking;
 using Game.Weapons;
@@ -11,7 +12,7 @@ namespace Game.Hunt
     /// <summary>
     /// Decides when the mentor speaks in a hunt that has a MentorScript: as each step starts, the first time each
     /// kind of sign is read, a map tip, a Hunter Sense tip when the hunter has found nothing for a while, a breathing
-    /// tip at the first scope, and a word after a miss or a poor hit. One line at a time, never the same line twice
+    /// tip at the first scope, what the first alarm calls mean, and a word after a miss or a poor hit. One line at a time, never the same line twice
     /// in a hunt, quiet during the briefing, the kill camera and the result.
     /// </summary>
     public sealed class MentorDirector : MonoBehaviour
@@ -51,6 +52,7 @@ namespace Game.Hunt
             if (tracking) tracking.ClueDiscovered += OnClue;
             if (weapon) weapon.Fired += OnFired;
             AnimalHealth.AnyHit += OnAnimalHit;
+            AlarmEvents.Raised += OnAlarm;
         }
 
         void OnDestroy()
@@ -59,6 +61,7 @@ namespace Game.Hunt
             if (tracking) tracking.ClueDiscovered -= OnClue;
             if (weapon) weapon.Fired -= OnFired;
             AnimalHealth.AnyHit -= OnAnimalHit;
+            AlarmEvents.Raised -= OnAlarm;
         }
 
         void Update()
@@ -113,6 +116,15 @@ namespace Game.Hunt
         void OnFired(ShotResult shot)
         {
             if (!shot.hitAnimal) Say(script.miss, urgent: true);
+        }
+
+        void OnAlarm(AlarmCall call)
+        {
+            var stage = session.Stage;
+            if (stage == HuntStage.Briefing || stage == HuntStage.Result) return;
+            var line = call.causedByHunter ? script.alarmHunter
+                     : call.kind == AlarmKind.BirdScold ? script.alarmScold : script.alarmPredator;
+            Say(line, urgent: call.causedByHunter);
         }
 
         void OnAnimalHit(AnimalHealth animal, Game.Core.Combat.HitInfo hit, HitOutcome outcome)

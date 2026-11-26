@@ -64,6 +64,7 @@ namespace Game.Editor
             var tracking = EnsureTrackingAssets(log);
             var weapons = EnsureWeaponAssets(log);
             audioAssets = EnsureAudioAssets(surfaces, log);
+            alarmAssets = EnsureAlarmAssets(log);
             rifleAssets = EnsureRifleAssets(weapons.rifle, log);
             var animals = EnsureAnimalAssets(weapons.blood, log);
             AssetDatabase.SaveAssets();
@@ -361,6 +362,7 @@ namespace Game.Editor
 
                 AddTrackingHud(safe, font, knob, parchment, forest);
                 AddWindHud(safe, font, parchment, forest);
+                AddAlarmHud(safe, font, knob, parchment, forest);
                 AddWeaponHud((RectTransform)root.transform, safe, font, knob, weapons.scopeMask, parchment, forest);
                 AddHuntFlowHud((RectTransform)root.transform, font, parchment, forest);   // the cards draw over the HUD
                 AddSettingsHud((RectTransform)root.transform, safe, font, knob, parchment, forest);   // last: the pause panel draws over the cards
@@ -490,6 +492,7 @@ namespace Game.Editor
             BuildDistance(log);               // far snowy range, ridges fading to blue, valley mist
             BakeScatterCover(root.transform, spawn + rot * new Vector3(-12f, 0f, 14f), EnsureCoverRules(surfaces, log), log);
             BuildAnimalScene(root.transform, spawn, rot, animals, log);
+            BuildAlarmScene(root.transform, spawn, rot, alarmAssets, log);   // birds that give the wolf away
             BuildHuntSession(root.transform, player, log);   // after cover: the navigation mesh avoids it
             AddQualityTiers(root.transform, log);
 

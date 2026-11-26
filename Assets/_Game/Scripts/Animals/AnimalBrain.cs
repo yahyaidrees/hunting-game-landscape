@@ -54,9 +54,16 @@ namespace Game.Animals
         /// <summary>Raised when its charge reaches the hunter.</summary>
         public event Action Attacked;
         public static event Action<AnimalBrain, AnimalState> AnyStateChanged;
+        /// <summary>Every animal in the loaded scenes (alarm birds look through it).</summary>
+        public static readonly System.Collections.Generic.List<AnimalBrain> All = new System.Collections.Generic.List<AnimalBrain>();
+        /// <summary>Ground speed in metres per second.</summary>
+        public float Speed => agent ? agent.velocity.magnitude : 0f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => AnyStateChanged = null;
+        static void ResetStatics() { AnyStateChanged = null; All.Clear(); }
+
+        void OnEnable() { if (!All.Contains(this)) All.Add(this); }
+        void OnDisable() => All.Remove(this);
 
         void Awake()
         {
