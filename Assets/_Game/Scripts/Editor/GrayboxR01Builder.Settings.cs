@@ -68,13 +68,15 @@ namespace Game.Editor
             // support off, the Mali-G52 MC2 driver on Android 15 (VGO TEL New 26 Lite) hangs the whole GPU (found
             // 2026-11-26; switching the tier at runtime and starting on Low both froze the phone's display).
             // Distance 0 draws no shadow map either, so the cost and the look are the same. Animals get a blob.
-            set.low.pipeline = Tier("Low", 0.7f, true, 0f, 1, false, false);
+            // render scale 0.6 (owner approved 2026-11-26): on the Galaxy A30s at the 30 cap, 29.1 -> 29.7 fps and the
+            // worst 1% 18 -> 20 fps; on its 720p screen 0.7 vs 0.6 is hard to tell apart (the HUD stays full resolution)
+            set.low.pipeline = Tier("Low", 0.6f, true, 0f, 1, false, false);
             set.medium.pipeline = Tier("Medium", 0.85f, true, 25f, 1, false, true);
             set.high.pipeline = Tier("High", 1f, true, 50f, 2, true, true);
             set.low.fxaa = false; set.medium.fxaa = true; set.high.fxaa = true;
             EditorUtility.SetDirty(set);
             AssetDatabase.SaveAssets();
-            log.AppendLine("graphics tiers: Low 0.7 no real-time shadows, no HDR, no FXAA; Medium 0.85 shadows 25 m; High 1.0 soft shadows 50 m in 2 cascades");
+            log.AppendLine("graphics tiers: Low 0.6 no real-time shadows, no HDR, no FXAA; Medium 0.85 shadows 25 m; High 1.0 soft shadows 50 m in 2 cascades");
             return set;
         }
 

@@ -641,7 +641,7 @@ The game picks a tier on first launch from the phone's memory and graphics chip,
 |---|---|---|---|
 | Typical phone | 3 GB memory, entry-level chip | 4 to 6 GB, mid-range chip | 8 GB or more, recent flagship chip |
 | Frame rate target | 30 | 30, option for 45 | 60 |
-| Render scale | 0.7 | 0.85 | 1.0 |
+| Render scale | 0.6 (measured on the Galaxy A30s, 2026-11-26) | 0.85 | 1.0 |
 | Shadows | Baked only, blob shadow under animals | Real-time, 1 cascade, 25 m | Soft, 2 cascades, 50 m |
 | Grass density | 30% | 60% | 100% |
 | Textures | Half size | Full | Full |
