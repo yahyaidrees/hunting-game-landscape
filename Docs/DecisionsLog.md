@@ -10,6 +10,7 @@ Every owner decision from section 21 of the game plan, with the date it was made
 | 2026-11-19 | — | How old assets come in | Through the staging folder `Assets/_Incoming/OldGame/`. No old scripts are copied |
 | 2026-11-19 | — | Where Phase 1 starts | Hunt-first graybox in the Meadow region. Final art comes after the hunt is fun |
 | 2026-11-19 | — | Asset delivery | Play Asset Delivery through Addressables for Android: base about 150 MB, Region 2 fast-follow, later content on-demand. Plan section 17 updated |
+| 2026-11-26 | 9 | Existing Firebase project | Reuse the old game's Firebase project (its google-services.json, kept out of Git). The new build uses Firebase 14.2.0 with Analytics, Crashlytics and Remote Config. GameAnalytics from the old game is not carried over. Google Play Games is still open |
 | 2026-11-19 | 19★ | Meshy plan | Paid plan: private licence, no credit needed. Check the live terms on the first generation day and note the plan name in the licence log rows |
 | 2026-11-19 | — | Staging in Git | `Assets/_Incoming/` and `SourceAssets/OldGame/` stay local only (6.6 GB of old assets); only gate-passed assets are committed |
 | 2026-11-20 | — | Old environments (Alpine, Savanna, Snow) | Accepted as the starting base after the URP port, though they don't match the Built-in look. They'll be expanded (farm elements, more ground as the player walks) or replaced later if needed. Likely cause of the look difference: this project is Linear colour space, while the old art was baked for the old project's (probably Gamma) colour space. Regrade the materials when the look is worked on |
@@ -32,7 +33,6 @@ Every owner decision from section 21 of the game plan, with the date it was made
 | 6★ | Old project folder; signing key, app ID, Play Console test track access | Owner provides in Phase 0; no secrets in the repo | Default |
 | 7★ | Which old animal models and animations the owner holds licences for | Checked in the inventory; unclear means not reused | Default |
 | 8 | Existing purchases that must keep working | Yes, all restored | Default |
-| 9 | Existing Firebase project and Google Play Games set-up | Both set up new | Default |
 | 10 | Keep current name or new title | Same name, new subtitle | Default |
 | 11 | Blood level and age rating | Light blood with an off switch, teen rating | Default |
 | 12 | Fixed farmer or choice of look; third person on farm | Choice of two looks; first person in hunts | Default |
