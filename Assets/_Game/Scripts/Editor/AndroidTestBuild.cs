@@ -16,6 +16,7 @@ namespace Game.Editor
     {
         public const string OutputPath = "Builds/Android/FarmerOfTheJungle-test.apk";
         const string ResultPath = "Temp/build_result.txt";
+        const string PendingKey = "Game.AndroidTestBuild.Pending";   // 1 release, 2 development; survives script reloads
 
         [MenuItem("Game/Build/Android Test Build (release speed + perf lab)")]
         public static void BuildRelease() => Build(false);
@@ -23,11 +24,30 @@ namespace Game.Editor
         [MenuItem("Game/Build/Android Test Build (development, profiler)")]
         public static void BuildDevelopment() => Build(true);
 
-        /// <summary>Starts the build on the next editor tick, so the caller returns at once.</summary>
+        /// <summary>
+        /// Starts the build on the next editor tick, so the caller returns at once. Remembered across script reloads
+        /// (a reload right after scheduling used to drop the request).
+        /// </summary>
         public static void Schedule(bool development)
         {
             if (File.Exists(ResultPath)) File.Delete(ResultPath);
-            EditorApplication.delayCall += () => Build(development);
+            SessionState.SetInt(PendingKey, development ? 2 : 1);
+            EditorApplication.delayCall += RunPending;
+        }
+
+        [InitializeOnLoadMethod]
+        static void ResumeAfterReload()
+        {
+            if (SessionState.GetInt(PendingKey, 0) != 0) EditorApplication.delayCall += RunPending;
+        }
+
+        static void RunPending()
+        {
+            int pending = SessionState.GetInt(PendingKey, 0);
+            if (pending == 0 || BuildPipeline.isBuildingPlayer) return;
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating) { EditorApplication.delayCall += RunPending; return; }
+            SessionState.EraseInt(PendingKey);
+            Build(pending == 2);
         }
 
         static void Build(bool development)

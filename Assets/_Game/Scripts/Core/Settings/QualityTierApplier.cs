@@ -58,6 +58,14 @@ namespace Game.Core.Settings
 
         void OnDisable() => GameSettings.Changed -= Apply;
 
+        /// <summary>Applies the current tier and frame rate again (after the calibrator lifted the cap to measure).</summary>
+        public void Reapply()
+        {
+            applied = null;
+            appliedFps = -1;
+            Apply();
+        }
+
         void Apply()
         {
             if (!tiers) return;

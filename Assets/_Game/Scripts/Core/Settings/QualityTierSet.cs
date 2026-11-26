@@ -45,12 +45,17 @@ namespace Game.Core.Settings
         public static float DetailDensity { get; internal set; } = -1f;
         public static QualityTier Current { get; internal set; } = QualityTier.High;
         public static bool HasApplied { get; internal set; }
+        /// <summary>
+        /// True while the player is actually playing (a hunt step, not a briefing, result card or menu). Auto measures
+        /// the phone only then, because menus draw far less than the hunt. Set by the hunt session.
+        /// </summary>
+        public static bool MeasurementAllowed { get; set; }
         /// <summary>Raised after a tier is applied (also when only the frame rate changed).</summary>
         public static event Action<QualityTier> Applied;
 
         internal static void RaiseApplied() => Applied?.Invoke(Current);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { Applied = null; DetailDensity = -1f; HasApplied = false; Current = QualityTier.High; }
+        static void ResetStatics() { Applied = null; DetailDensity = -1f; HasApplied = false; Current = QualityTier.High; MeasurementAllowed = false; }
     }
 }

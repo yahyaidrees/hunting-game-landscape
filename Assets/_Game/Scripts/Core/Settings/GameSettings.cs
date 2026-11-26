@@ -18,6 +18,10 @@ namespace Game.Core.Settings
         const string LookKey = "settings.look.sensitivity", ScopeKey = "settings.look.scope", InvertKey = "settings.look.invert";
         const string LeftKey = "settings.hud.lefthanded", ButtonKey = "settings.hud.buttonscale";
         const string TierKey = "settings.graphics.tier", FpsKey = "settings.graphics.fps";
+        const string MeasuredKey = "settings.graphics.measured", MeasuredDoneKey = "settings.graphics.measured.done";
+        const string MeasuredDeviceKey = "settings.graphics.measured.device", MeasuredVersionKey = "settings.graphics.measured.version";
+        /// <summary>Raise when the measuring rules change, so every phone measures itself again.</summary>
+        public const int MeasureVersion = 1;
 
         public const float MinLook = 0.3f, MaxLook = 2.5f, MinScope = 0.3f, MaxScope = 2f, MinButton = 0.8f, MaxButton = 1.3f;
         /// <summary>QualityTierChoice value meaning "pick from the phone".</summary>
@@ -27,6 +31,8 @@ namespace Game.Core.Settings
         static bool blood, invertLook, leftHanded;
         static float music, sound, voice, look, scope, buttonScale;
         static int tierChoice, frameRate;
+        static int measured = -1;   // -1: this device has not been measured
+        static bool measuredDone;
 
         /// <summary>Raised after any option changes.</summary>
         public static event Action Changed;
@@ -49,6 +55,11 @@ namespace Game.Core.Settings
             buttonScale = Mathf.Clamp(PlayerPrefs.GetFloat(ButtonKey, 1f), MinButton, MaxButton);
             tierChoice = Mathf.Clamp(PlayerPrefs.GetInt(TierKey, AutoTier), AutoTier, (int)QualityTier.High);
             frameRate = PlayerPrefs.GetInt(FpsKey, 0);
+            // a measurement counts only on the same device model and with the same measuring rules
+            bool valid = PlayerPrefs.GetInt(MeasuredVersionKey, 0) == MeasureVersion
+                         && PlayerPrefs.GetString(MeasuredDeviceKey, "") == SystemInfo.deviceModel;
+            measured = valid ? Mathf.Clamp(PlayerPrefs.GetInt(MeasuredKey, -1), -1, (int)QualityTier.High) : -1;
+            measuredDone = valid && measured >= 0 && PlayerPrefs.GetInt(MeasuredDoneKey, 0) == 1;
         }
 
         static void SaveInt(string key, int value) { PlayerPrefs.SetInt(key, value); Changed?.Invoke(); }
@@ -86,10 +97,37 @@ namespace Game.Core.Settings
         public static int FrameRateChoice { get { Load(); return frameRate; } set { Load(); frameRate = value is 30 or 45 or 60 ? value : 0; SaveInt(FpsKey, frameRate); } }
 
         /// <summary>
-        /// The tier this phone gets on Auto, from memory and graphics features (plan section 13: Low about 3 GB,
-        /// Medium 4 to 6 GB, High 8 GB or more). A starting rule, to tune on the test phones.
+        /// The tier this phone gets on Auto: the one measured on this device (AutoTierCalibrator times real hunting
+        /// frames), or until then the estimate from memory.
         /// </summary>
-        public static QualityTier DetectedTier
+        public static QualityTier DetectedTier { get { Load(); return measured >= 0 ? (QualityTier)measured : EstimatedTier; } }
+
+        /// <summary>The Auto tier comes from a finished measurement on this device (not the memory estimate).</summary>
+        public static bool TierMeasured { get { Load(); return measuredDone; } }
+
+        /// <summary>
+        /// Saves the Auto tier for this device. <paramref name="done"/> false while measuring is still going on (the
+        /// tier is used, but measuring resumes next time); true when finished, or after the in-game safety step-down.
+        /// </summary>
+        public static void SetMeasuredTier(QualityTier tier, bool done)
+        {
+            Load();
+            measured = (int)tier;
+            measuredDone = done;
+            PlayerPrefs.SetInt(MeasuredKey, measured);
+            PlayerPrefs.SetInt(MeasuredDoneKey, done ? 1 : 0);
+            PlayerPrefs.SetString(MeasuredDeviceKey, SystemInfo.deviceModel);
+            PlayerPrefs.SetInt(MeasuredVersionKey, MeasureVersion);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// The starting estimate before a device is measured, from memory and graphics features (plan section 13: Low
+        /// about 3 GB, Medium 4 to 6 GB, High 8 GB or more). On the test phones memory alone guessed wrong both ways
+        /// (a 6 GB Mali-G52 phone needs Low, a 4 GB one manages Medium), which is why Auto measures.
+        /// </summary>
+        public static QualityTier EstimatedTier
         {
             get
             {

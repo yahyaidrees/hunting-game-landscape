@@ -87,6 +87,7 @@ namespace Game.Editor
             var go = new GameObject("QualityTiers");
             go.transform.SetParent(root, false);
             SetRefs(go.AddComponent<QualityTierApplier>(), ("tiers", set));
+            go.AddComponent<AutoTierCalibrator>();   // Auto measures the phone during the first hunt
         }
 
         // A soft dark oval under an animal for the Low tier, where real-time shadows are off.

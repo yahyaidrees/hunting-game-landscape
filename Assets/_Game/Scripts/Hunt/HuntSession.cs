@@ -79,6 +79,7 @@ namespace Game.Hunt
             if (Stage != HuntStage.Briefing && Stage != HuntStage.Result)
                 AnalyticsEvents.Log("hunt_abandon", ("hunt", hunt.huntId), ("stage", Stage), ("seconds", Mathf.RoundToInt(Elapsed)));
             if (Time.timeScale == 0f) Time.timeScale = 1f;
+            Game.Core.Settings.QualityTiers.MeasurementAllowed = false;
         }
 
         float Elapsed => Time.time - startTime;
@@ -124,6 +125,7 @@ namespace Game.Hunt
         {
             Stage = next;
             bool menu = next == HuntStage.Briefing || next == HuntStage.Result;
+            Game.Core.Settings.QualityTiers.MeasurementAllowed = !menu;   // Auto measures the phone during real hunting only
             foreach (var b in pauseInMenus) if (b) b.enabled = !menu;
             Time.timeScale = next == HuntStage.Briefing ? 0f : 1f;   // the world waits while the player reads
             if (!menu) AnalyticsEvents.Log("hunt_stage", ("hunt", hunt.huntId), ("stage", next), ("seconds", Mathf.RoundToInt(Elapsed)));

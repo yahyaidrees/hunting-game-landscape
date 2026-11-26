@@ -37,7 +37,7 @@ namespace Game.Core.Settings
                       $"ram={SystemInfo.systemMemorySize}MB gpu={SystemInfo.graphicsDeviceName} gpuMem={SystemInfo.graphicsMemorySize}MB " +
                       $"api={SystemInfo.graphicsDeviceType} shaderLevel={SystemInfo.graphicsShaderLevel} os={SystemInfo.operatingSystem} " +
                       $"screen={Screen.width}x{Screen.height}@{Screen.currentResolution.refreshRateRatio.value:0} " +
-                      $"autoTier={GameSettings.DetectedTier} choice={GameSettings.QualityTierChoice}");
+                      $"autoTier={GameSettings.DetectedTier} measured={GameSettings.TierMeasured} choice={GameSettings.QualityTierChoice}");
             windowStart = Time.unscaledTime;
             batches = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Batches Count");
             setPass = ProfilerRecorder.StartNew(ProfilerCategory.Render, "SetPass Calls Count");
