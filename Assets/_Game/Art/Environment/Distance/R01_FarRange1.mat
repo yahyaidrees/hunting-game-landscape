@@ -11,7 +11,8 @@ Material:
   m_Shader: {fileID: 4800000, guid: 54a23942eb9df9040b2abb5b7f00be73, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _ALPHASPLIT
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -29,8 +30,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DepthK: 0.000003
+    - _AlphaSplit: 0.98
+    - _AlphaSplitOn: 1
+    - _DepthK: 0.0000035
+    - _DstBlend: 10
     - _Haze: 0
+    - _SplitSide: -1
+    - _SrcBlend: 5
+    - _ZWrite: 0
     m_Colors:
     - _HazeColor: {r: 0.66, g: 0.76, b: 0.88, a: 1}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}

@@ -36,7 +36,7 @@ namespace Game.Editor
             var mobile = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(MobilePipelinePath);
             if (!mobile) { log.AppendLine("WARNING: " + MobilePipelinePath + " not found; no graphics tiers"); return null; }
 
-            UniversalRenderPipelineAsset Tier(string name, float renderScale, bool shadows, float distance, int cascades, bool soft)
+            UniversalRenderPipelineAsset Tier(string name, float renderScale, bool shadows, float distance, int cascades, bool soft, bool hdr)
             {
                 string path = $"{SettingsDataDir}/URP_{name}.asset";
                 var asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(path);
@@ -51,6 +51,7 @@ namespace Game.Editor
                 asset.renderScale = renderScale;
                 asset.shadowDistance = distance;
                 asset.shadowCascadeCount = cascades;
+                asset.supportsHDR = hdr;
                 var so = new SerializedObject(asset);
                 so.FindProperty("m_MainLightShadowsSupported").boolValue = shadows;
                 so.FindProperty("m_SoftShadowsSupported").boolValue = soft;
@@ -62,12 +63,14 @@ namespace Game.Editor
             }
 
             var set = EnsureAsset<QualityTierSet>(QualityTiersPath, log);
-            set.low.pipeline = Tier("Low", 0.7f, false, 25f, 1, false);   // baked shadows only; animals get a blob
-            set.medium.pipeline = Tier("Medium", 0.85f, true, 25f, 1, false);
-            set.high.pipeline = Tier("High", 1f, true, 50f, 2, true);
+            // Low: no HDR (measured 2.5 ms a frame on the Galaxy A30s); FXAA off is set on the tier itself
+            set.low.pipeline = Tier("Low", 0.7f, false, 25f, 1, false, false);   // baked shadows only; animals get a blob
+            set.medium.pipeline = Tier("Medium", 0.85f, true, 25f, 1, false, true);
+            set.high.pipeline = Tier("High", 1f, true, 50f, 2, true, true);
+            set.low.fxaa = false; set.medium.fxaa = true; set.high.fxaa = true;
             EditorUtility.SetDirty(set);
             AssetDatabase.SaveAssets();
-            log.AppendLine("graphics tiers: Low 0.7 no real-time shadows, Medium 0.85 shadows 25 m, High 1.0 soft shadows 50 m in 2 cascades");
+            log.AppendLine("graphics tiers: Low 0.7 no real-time shadows, no HDR, no FXAA; Medium 0.85 shadows 25 m; High 1.0 soft shadows 50 m in 2 cascades");
             return set;
         }
 
@@ -345,6 +348,20 @@ namespace Game.Editor
             SetArray(vso.FindProperty("extraOpeners"), briefSettings ? new Object[] { briefSettings } : new Object[0]);
             vso.ApplyModifiedPropertiesWithoutUndo();
             screen.gameObject.SetActive(false);
+        }
+
+        // Panels that fade to nothing (scope overlay, messages, subtitles, the alarm marker) get a nested Canvas that
+        // is switched off while invisible, and every graphic skips fully transparent geometry: on a low-end phone
+        // each full-screen layer costs, drawn or not.
+        static void CullFadedPanels(RectTransform root)
+        {
+            foreach (var group in root.GetComponentsInChildren<CanvasGroup>(true))
+            {
+                if (group.blocksRaycasts) continue;   // only display-only panels (they take no touches)
+                if (!group.TryGetComponent<Canvas>(out _)) group.gameObject.AddComponent<Canvas>();
+                if (!group.TryGetComponent<HiddenWhenFaded>(out _)) group.gameObject.AddComponent<HiddenWhenFaded>();
+            }
+            foreach (var cr in root.GetComponentsInChildren<CanvasRenderer>(true)) cr.cullTransparentMesh = true;
         }
 
         static void SetEnum(Object target, string field, int value)

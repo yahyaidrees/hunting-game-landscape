@@ -45,6 +45,8 @@ namespace Game.UI
             flash = Mathf.MoveTowards(flash, 0f, Time.deltaTime * 1.5f);
             var c = damageFlash.color;
             damageFlash.color = new Color(c.r, c.g, c.b, flash * 0.45f);
+            bool flashing = flash > 0.001f;   // a full-screen layer: not drawn at all while clear
+            if (damageFlash.enabled != flashing) damageFlash.enabled = flashing;
         }
 
         void Show(string text)

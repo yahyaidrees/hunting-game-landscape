@@ -6,8 +6,8 @@ namespace Game.Core.Settings
 {
     /// <summary>
     /// Applies the graphics tier from GameSettings (Auto or the player's choice) and re-applies it whenever the
-    /// settings change: the tier's pipeline asset (render scale, shadows), texture size, level-of-detail distance,
-    /// detail density, bloom and the frame rate cap. One per scene for now; it moves to the Boot scene later.
+    /// settings change: the tier's pipeline asset (render scale, shadows, HDR), texture size, level-of-detail distance,
+    /// detail density, bloom, FXAA and the frame rate cap. One per scene for now; it moves to the Boot scene later.
     /// In the editor, everything it changed is put back when Play mode ends, so ProjectSettings stay untouched.
     /// </summary>
     [DefaultExecutionOrder(-100)]
@@ -76,6 +76,7 @@ namespace Game.Core.Settings
                 QualitySettings.lodBias = t.lodBias;
                 QualityTiers.DetailDensity = t.detailDensity;
                 SetBloom(t.bloom);
+                SetFxaa(t.fxaa);
                 applied = t;
             }
 #if !UNITY_EDITOR
@@ -86,6 +87,13 @@ namespace Game.Core.Settings
             QualityTiers.Current = tier;
             QualityTiers.HasApplied = true;
             QualityTiers.RaiseApplied();
+        }
+
+        static void SetFxaa(bool on)
+        {
+            foreach (var cam in FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (cam.TryGetComponent<UniversalAdditionalCameraData>(out var data) && data.renderType == CameraRenderType.Base)
+                    data.antialiasing = on ? AntialiasingMode.FastApproximateAntialiasing : AntialiasingMode.None;
         }
 
         // Volume.profile makes a scene-only copy of the shared profile, so the asset on disk never changes.

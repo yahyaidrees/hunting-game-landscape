@@ -27,9 +27,11 @@ namespace Game.Core.Settings
             public float lodBias = 1f;
             [Tooltip("Bloom on the colour grade volume (tonemapping, grade and vignette stay on every tier).")]
             public bool bloom = true;
+            [Tooltip("FXAA edge smoothing on the game cameras. Off on Low: on a 720p phone it blurs more than it smooths (about 1.5 ms on a Mali-G71).")]
+            public bool fxaa = true;
         }
 
-        public Tier low = new Tier { frameRate = 30, textureMipLimit = 1, detailDensity = 0.3f, lodBias = 0.7f, bloom = false };
+        public Tier low = new Tier { frameRate = 30, textureMipLimit = 1, detailDensity = 0.3f, lodBias = 0.7f, bloom = false, fxaa = false };
         public Tier medium = new Tier { frameRate = 30, detailDensity = 0.6f, lodBias = 0.85f };
         public Tier high = new Tier { frameRate = 60, detailDensity = 1f, lodBias = 1f };
 

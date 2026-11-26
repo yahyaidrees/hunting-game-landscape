@@ -307,8 +307,7 @@ namespace Game.Editor
                 look.anchorMin = new Vector2(0.5f, 0f);
                 look.anchorMax = Vector2.one;
                 look.offsetMin = look.offsetMax = Vector2.zero;
-                var lookImg = look.gameObject.AddComponent<Image>();
-                lookImg.color = new Color(0, 0, 0, 0);
+                look.gameObject.AddComponent<TouchSurface>();   // catches touches, draws nothing
                 look.gameObject.AddComponent<TouchLookArea>();
 
                 // Bottom left: move stick.
@@ -367,6 +366,7 @@ namespace Game.Editor
                 AddHuntFlowHud((RectTransform)root.transform, font, parchment, forest);   // the cards draw over the HUD
                 AddSettingsHud((RectTransform)root.transform, safe, font, knob, parchment, forest);   // last: the pause panel draws over the cards
                 AddHudLayout(safe);   // after every SafeArea child exists: left-handed mirror and button size
+                CullFadedPanels((RectTransform)root.transform);
 
                 var prefab = PrefabUtility.SaveAsPrefabAsset(root, HudPrefab);
                 log.AppendLine("saved " + HudPrefab);
@@ -490,6 +490,7 @@ namespace Game.Editor
             BuildTrackingScene(root.transform, spawn, rot, tracking, log);
             BuildDressing(spawn, rot, log);   // trees, shrubs, flowers, mossy rocks: before cover, so they get cover too
             BuildDistance(log);               // far snowy range, ridges fading to blue, valley mist
+            SplitBackdrop(log);               // phones: solid parts of the backdrop drawn before the sky
             BakeScatterCover(root.transform, spawn + rot * new Vector3(-12f, 0f, 14f), EnsureCoverRules(surfaces, log), log);
             BuildAnimalScene(root.transform, spawn, rot, animals, log);
             BuildAlarmScene(root.transform, spawn, rot, alarmAssets, log);   // birds that give the wolf away
