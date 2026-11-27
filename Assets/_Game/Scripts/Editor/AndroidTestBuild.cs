@@ -59,12 +59,15 @@ namespace Game.Editor
                 locationPathName = development ? OutputPath.Replace("-test", "-dev") : OutputPath,
                 target = BuildTarget.Android,
                 options = development ? BuildOptions.Development : BuildOptions.None,
-                extraScriptingDefines = new[] { "GAME_PERFLAB" },
+                extraScriptingDefines = McpBuildExclusion.BuildDefines("GAME_PERFLAB"),
             };
             var text = new StringBuilder();
             try
             {
-                var report = BuildPipeline.BuildPlayer(opts);
+                McpBuildExclusion.BuildingWithDefine = true;
+                BuildReport report;
+                try { report = BuildPipeline.BuildPlayer(opts); }
+                finally { McpBuildExclusion.BuildingWithDefine = false; }
                 var s = report.summary;
                 text.AppendLine($"result={s.result} seconds={s.totalTime.TotalSeconds:0} path={opts.locationPathName} errors={s.totalErrors} warnings={s.totalWarnings}");
                 foreach (var step in report.steps)

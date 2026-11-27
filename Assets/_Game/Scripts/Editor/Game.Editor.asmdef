@@ -14,7 +14,12 @@
         "Unity.InputSystem",
         "UnityEngine.UI",
         "Unity.RenderPipelines.Universal.Runtime",
-        "Unity.RenderPipelines.Core.Runtime"
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "Unity.Addressables.Android",
+        "Unity.Addressables.Android.Editor",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [
         "Editor"

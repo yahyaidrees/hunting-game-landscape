@@ -85,3 +85,9 @@ desktop.ini
 Assets/packages-merged-link/
 Assets/packages-merged-link.meta
 Assets/Resources/PerformanceTestRun*
+
+# Addressables / Play Asset Delivery: written on every build
+/[Aa]ssets/PlayAssetDelivery/Build/
+/[Aa]ssets/PlayAssetDelivery/Build.meta
+/[Aa]ssets/AddressableAssetsData/Android/
+/[Aa]ssets/AddressableAssetsData/Android.meta
