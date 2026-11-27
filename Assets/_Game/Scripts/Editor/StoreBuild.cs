@@ -11,13 +11,16 @@ namespace Game.Editor
     /// The Google Play build (Gate A): an Android App Bundle signed with the owner's upload key, Addressables built
     /// into asset packs (Play Asset Delivery), no performance lab, no MCP plugin, version code above the old game's
     /// 99 and one higher on every build. The signing key comes from the owner's Windows user environment variables,
-    /// never from the repository: FOTJ_KEYSTORE (path), FOTJ_KEYSTORE_PASS, FOTJ_KEY_ALIAS, FOTJ_KEY_PASS. Keystore
+    /// never from the repository: FOTJ_KEYSTORE (path) and FOTJ_KEYSTORE_PASS (optional: FOTJ_KEY_ALIAS, FOTJ_KEY_PASS when
+    /// they differ from the defaults). Keystore
     /// settings are put back after the build. Writes Temp/store_build_result.txt.
     /// </summary>
     public static class StoreBuild
     {
         const string ResultPath = "Temp/store_build_result.txt";
         const int FirstVersionCode = 100;   // the old game shipped 99
+        /// <summary>The upload key in the owner's keystore (not a secret; FOTJ_KEY_ALIAS overrides it).</summary>
+        const string DefaultAlias = "metaphasegames";
 
         [MenuItem("Game/Build/Google Play Bundle (AAB)")]
         public static void BuildMenu() => Debug.Log("[build] " + Build());
@@ -36,9 +39,10 @@ namespace Game.Editor
         {
             var text = new StringBuilder();
             if (!forUpload) return BuildBundle(null, null, null, null, text);
-            string keystore = Env("FOTJ_KEYSTORE"), storePass = Env("FOTJ_KEYSTORE_PASS"), alias = Env("FOTJ_KEY_ALIAS"), keyPass = Env("FOTJ_KEY_PASS");
+            string keystore = Env("FOTJ_KEYSTORE"), storePass = Env("FOTJ_KEYSTORE_PASS");
+            string alias = Env("FOTJ_KEY_ALIAS") ?? DefaultAlias, keyPass = Env("FOTJ_KEY_PASS") ?? storePass;   // the key's password is the keystore's
             if (string.IsNullOrEmpty(keystore) || string.IsNullOrEmpty(storePass) || string.IsNullOrEmpty(alias) || string.IsNullOrEmpty(keyPass))
-                return Finish("result=Failed missing signing variables (FOTJ_KEYSTORE, FOTJ_KEYSTORE_PASS, FOTJ_KEY_ALIAS, FOTJ_KEY_PASS)");
+                return Finish("result=Failed missing signing variables (FOTJ_KEYSTORE, FOTJ_KEYSTORE_PASS)");
             if (!File.Exists(keystore)) return Finish("result=Failed keystore file not found at FOTJ_KEYSTORE");
             return BuildBundle(keystore, storePass, alias, keyPass, text);
         }
@@ -98,6 +102,9 @@ namespace Game.Editor
                 EditorUserBuildSettings.buildAppBundle = keepBundle;
                 PlayerSettings.Android.splitApplicationBinary = keepSplit;
                 if (!succeeded || !forUpload) PlayerSettings.Android.bundleVersionCode = keepCode;   // only uploads use up version codes
+                // Unity wrote the settings to disk when the build started: save the restored ones (the passwords never are)
+                EditorUtility.SetDirty(Unsupported.GetSerializedAssetInterfaceSingleton("PlayerSettings"));
+                AssetDatabase.SaveAssets();
             }
             return Finish(text.ToString());
         }
