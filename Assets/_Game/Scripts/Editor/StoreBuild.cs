@@ -26,6 +26,15 @@ namespace Game.Editor
         public static void BuildMenu() => Debug.Log("[build] " + Build());
 
         /// <summary>
+        /// The same upload with the GAME_PLAYTEST define: the Gate B question card shows after each hunt. For the
+        /// internal test track only, never for a public release.
+        /// </summary>
+        [MenuItem("Game/Build/Google Play Bundle (AAB, playtest)")]
+        public static void BuildPlaytestMenu() => Debug.Log("[build] " + Build(playtest: true));
+
+        public const string PlaytestDefine = "GAME_PLAYTEST";
+
+        /// <summary>
         /// The same bundle signed with the debug key, version code unchanged, for testing asset packs on a phone over
         /// USB (bundletool --local-testing) before anything goes to Play.
         /// </summary>
@@ -35,19 +44,19 @@ namespace Game.Editor
         static string Env(string name) =>
             Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.User) ?? Environment.GetEnvironmentVariable(name);
 
-        public static string Build(bool forUpload = true)
+        public static string Build(bool forUpload = true, bool playtest = false)
         {
             var text = new StringBuilder();
-            if (!forUpload) return BuildBundle(null, null, null, null, text);
+            if (!forUpload) return BuildBundle(null, null, null, null, playtest, text);
             string keystore = Env("FOTJ_KEYSTORE"), storePass = Env("FOTJ_KEYSTORE_PASS");
             string alias = Env("FOTJ_KEY_ALIAS") ?? DefaultAlias, keyPass = Env("FOTJ_KEY_PASS") ?? storePass;   // the key's password is the keystore's
             if (string.IsNullOrEmpty(keystore) || string.IsNullOrEmpty(storePass) || string.IsNullOrEmpty(alias) || string.IsNullOrEmpty(keyPass))
                 return Finish("result=Failed missing signing variables (FOTJ_KEYSTORE, FOTJ_KEYSTORE_PASS)");
             if (!File.Exists(keystore)) return Finish("result=Failed keystore file not found at FOTJ_KEYSTORE");
-            return BuildBundle(keystore, storePass, alias, keyPass, text);
+            return BuildBundle(keystore, storePass, alias, keyPass, playtest, text);
         }
 
-        static string BuildBundle(string keystore, string storePass, string alias, string keyPass, StringBuilder text)
+        static string BuildBundle(string keystore, string storePass, string alias, string keyPass, bool playtest, StringBuilder text)
         {
             bool forUpload = keystore != null;
 
@@ -81,11 +90,11 @@ namespace Game.Editor
                     locationPathName = output,
                     target = BuildTarget.Android,
                     options = BuildOptions.None,
-                    extraScriptingDefines = McpBuildExclusion.BuildDefines(),
+                    extraScriptingDefines = playtest ? McpBuildExclusion.BuildDefines(PlaytestDefine) : McpBuildExclusion.BuildDefines(),
                 });
                 var s = report.summary;
                 succeeded = s.result == BuildResult.Succeeded;
-                text.AppendLine($"result={s.result} versionCode={code} seconds={s.totalTime.TotalSeconds:0} path={output} sizeMB={(File.Exists(output) ? new FileInfo(output).Length / 1048576f : 0f):0.0} errors={s.totalErrors} warnings={s.totalWarnings}");
+                text.AppendLine($"result={s.result} playtest={playtest} versionCode={code} seconds={s.totalTime.TotalSeconds:0} path={output} sizeMB={(File.Exists(output) ? new FileInfo(output).Length / 1048576f : 0f):0.0} errors={s.totalErrors} warnings={s.totalWarnings}");
                 foreach (var step in report.steps)
                 foreach (var m in step.messages)
                     if (m.type == LogType.Error || m.type == LogType.Exception) text.AppendLine("ERR " + m.content);

@@ -204,6 +204,11 @@ namespace Game.Editor
             var so = new SerializedObject(view);
             SetArray(so.FindProperty("hideWithCards"), others.Cast<Object>().ToArray());
             so.ApplyModifiedPropertiesWithoutUndo();
+
+            // Gate B questions over the result card (shown only in playtest builds; the card builds itself)
+            var survey = NewRect("PlaytestSurvey", root);
+            Stretch(survey);
+            SetRefs(survey.gameObject.AddComponent<PlaytestSurveyView>(), ("font", font));
         }
     }
 }
