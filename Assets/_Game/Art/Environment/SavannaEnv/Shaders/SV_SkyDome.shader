@@ -61,7 +61,7 @@ Shader "SavannaEnv/SkyDome"
                 UNITY_BRANCH
                 if (_EnvNight > 0)
                     c = lerp(c, ENV_NightSky(normalize(i.dir)), _EnvNight);
-                return half4(c, 1);
+                return half4(ENV_LowTierGrade(c), 1);
             }
             ENDHLSL
         }

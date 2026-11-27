@@ -7,7 +7,7 @@ namespace Game.Core.Settings
     /// <summary>
     /// Applies the graphics tier from GameSettings (Auto or the player's choice) and re-applies it whenever the
     /// settings change: the tier's pipeline asset (render scale, shadows, HDR), texture size, level-of-detail distance,
-    /// detail density, bloom, FXAA and the frame rate cap. One per scene for now; it moves to the Boot scene later.
+    /// detail density, the colour grade (post-processing) and bloom, FXAA, the light lift and the frame rate cap. One per scene for now; it moves to the Boot scene later.
     /// In the editor, everything it changed is put back when Play mode ends, so ProjectSettings stay untouched.
     /// </summary>
     [DefaultExecutionOrder(-100)]
@@ -44,6 +44,7 @@ namespace Game.Core.Settings
             QualitySettings.globalTextureMipmapLimit = originalMipLimit;
             QualitySettings.lodBias = originalLodBias;
             Application.targetFrameRate = originalFps;
+            Shader.SetGlobalFloat(LowSatId, 0f);   // shader globals outlive Play mode in the editor
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -113,6 +114,8 @@ namespace Game.Core.Settings
                 QualityTiers.DetailDensity = t.detailDensity;
                 SetBloom(t.bloom);
                 SetFxaa(t.fxaa);
+                SetPostProcessing(t.postProcessing);
+                SetLight(t);
                 applied = t;
             }
 #if !UNITY_EDITOR
@@ -124,6 +127,49 @@ namespace Game.Core.Settings
             QualityTiers.HasApplied = true;
             QualityTiers.RaiseApplied();
         }
+
+        static void SetPostProcessing(bool on)
+        {
+            foreach (var cam in FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (cam.TryGetComponent<UniversalAdditionalCameraData>(out var data) && data.renderType == CameraRenderType.Base)
+                    data.renderPostProcessing = on;
+        }
+
+        // the scene's own light, read once, so tiers scale it instead of compounding (Play mode undoes the changes)
+        Light sun;
+        bool haveSceneLight;
+        float sceneSunIntensity;
+        Color sceneSunColor, sceneSky, sceneEquator, sceneGround, sceneFlat;
+
+        void SetLight(QualityTierSet.Tier t)
+        {
+            if (!haveSceneLight)
+            {
+                sun = RenderSettings.sun;
+                if (!sun)
+                    foreach (var l in FindObjectsByType<Light>(FindObjectsSortMode.None))
+                        if (l.type == LightType.Directional) { sun = l; break; }
+                if (sun) { sceneSunIntensity = sun.intensity; sceneSunColor = sun.color; }
+                sceneSky = RenderSettings.ambientSkyColor; sceneEquator = RenderSettings.ambientEquatorColor;
+                sceneGround = RenderSettings.ambientGroundColor; sceneFlat = RenderSettings.ambientLight;
+                haveSceneLight = true;
+            }
+            if (sun)
+            {
+                sun.intensity = sceneSunIntensity * t.sunScale;
+                sun.color = sceneSunColor * t.sunTint;
+            }
+            float a = t.ambientScale;
+            RenderSettings.ambientSkyColor = Scale(sceneSky, a);
+            RenderSettings.ambientEquatorColor = Scale(sceneEquator, a);
+            RenderSettings.ambientGroundColor = Scale(sceneGround, a);
+            RenderSettings.ambientLight = Scale(sceneFlat, a);
+            Shader.SetGlobalFloat(LowSatId, t.extraSaturation);   // EnvNight.cginc: ground, sky and backdrop
+        }
+
+        static readonly int LowSatId = Shader.PropertyToID("_EnvLowSat");
+
+        static Color Scale(Color c, float k) => new Color(c.r * k, c.g * k, c.b * k, c.a);
 
         static void SetFxaa(bool on)
         {

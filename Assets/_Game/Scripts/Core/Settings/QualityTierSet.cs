@@ -25,15 +25,26 @@ namespace Game.Core.Settings
             [Range(0.1f, 1f)] public float detailDensity = 1f;
             [Tooltip("Multiplies level-of-detail and scatter cull distances.")]
             public float lodBias = 1f;
-            [Tooltip("Bloom on the colour grade volume (tonemapping, grade and vignette stay on every tier).")]
+            [Tooltip("The colour grade (post-processing: tonemapping, grade, vignette, bloom) on the game cameras. Off on Low: on the Galaxy A30s it was what kept the game from holding 30 fps (29.5 with a dip every few seconds, a locked 30 without).")]
+            public bool postProcessing = true;
+            [Tooltip("Bloom on the colour grade volume, when the grade is on.")]
             public bool bloom = true;
+            [Tooltip("Sun intensity multiplier (1 = the scene's own). Without the grade the picture is flatter and darker, so Low lifts the light a little instead.")]
+            [Range(0.8f, 1.4f)] public float sunScale = 1f;
+            [Tooltip("Sky, horizon and ground ambient multiplier (1 = the scene's own).")]
+            [Range(0.8f, 1.4f)] public float ambientScale = 1f;
+            [Tooltip("Multiplies the sun's colour: a slight warm tint stands in for the grade's white balance.")]
+            public Color sunTint = Color.white;
+            [Tooltip("Extra saturation for the ground, sky and backdrop shaders (0 = none). Without the grade the meadow reads greyer; this is a few instructions in those shaders instead of a full-screen pass.")]
+            [Range(0f, 0.5f)] public float extraSaturation;
             [Tooltip("FXAA edge smoothing on the game cameras. Off on Low: on a 720p phone it blurs more than it smooths (about 1.5 ms on a Mali-G71).")]
             public bool fxaa = true;
             [Tooltip("Render scale while a cinematic plays (the kill camera), 0 = unchanged. The close-up wolf fills the screen with layered fur: on the Galaxy A30s it dipped to 25-28 fps at the Low scale. Slow motion hides the softer image.")]
             [Range(0f, 1f)] public float cinematicRenderScale;
         }
 
-        public Tier low = new Tier { frameRate = 30, textureMipLimit = 1, detailDensity = 0.3f, lodBias = 0.7f, bloom = false, fxaa = false };
+        public Tier low = new Tier { frameRate = 30, textureMipLimit = 1, detailDensity = 0.3f, lodBias = 0.7f, postProcessing = false, bloom = false, fxaa = false,
+                                     sunScale = 1.1f, ambientScale = 1.06f, sunTint = new Color(1f, 0.98f, 0.94f), extraSaturation = 0.2f };
         public Tier medium = new Tier { frameRate = 30, detailDensity = 0.6f, lodBias = 0.85f };
         public Tier high = new Tier { frameRate = 60, detailDensity = 1f, lodBias = 1f };
 

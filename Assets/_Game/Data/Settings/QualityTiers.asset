@@ -18,7 +18,12 @@ MonoBehaviour:
     textureMipLimit: 1
     detailDensity: 0.3
     lodBias: 0.7
+    postProcessing: 0
     bloom: 0
+    sunScale: 1.1
+    ambientScale: 1.06
+    sunTint: {r: 1, g: 0.98, b: 0.94, a: 1}
+    extraSaturation: 0.2
     fxaa: 0
     cinematicRenderScale: 0.45
   medium:
@@ -27,7 +32,12 @@ MonoBehaviour:
     textureMipLimit: 0
     detailDensity: 0.6
     lodBias: 0.85
+    postProcessing: 1
     bloom: 1
+    sunScale: 1
+    ambientScale: 1
+    sunTint: {r: 1, g: 1, b: 1, a: 1}
+    extraSaturation: 0
     fxaa: 1
     cinematicRenderScale: 0
   high:
@@ -36,6 +46,11 @@ MonoBehaviour:
     textureMipLimit: 0
     detailDensity: 1
     lodBias: 1
+    postProcessing: 1
     bloom: 1
+    sunScale: 1
+    ambientScale: 1
+    sunTint: {r: 1, g: 1, b: 1, a: 1}
+    extraSaturation: 0
     fxaa: 1
     cinematicRenderScale: 0

@@ -76,9 +76,19 @@ namespace Game.Editor
             set.low.fxaa = false; set.medium.fxaa = true; set.high.fxaa = true;
             // kill camera on Low: the close-up wolf dipped the Galaxy A30s to 25-28 fps (owner approved 2026-11-27)
             set.low.cinematicRenderScale = 0.45f; set.medium.cinematicRenderScale = 0f; set.high.cinematicRenderScale = 0f;
+            // Low without the colour grade (owner approved 2026-11-27): with the farm and livestock in, the Galaxy A30s
+            // ran 29.5 fps with a dip every few seconds while post-processing was on, and a locked 30 (scope, close
+            // wolf and kill camera too) with it off; render scale 0.45 or no scatter did not fix it. The light is
+            // lifted and warmed a little to make up for the grade's exposure and white balance, and the ground, sky
+            // and backdrop shaders take back the grade's +20% saturation (EnvNight.cginc, _EnvLowSat).
+            set.low.postProcessing = false; set.medium.postProcessing = true; set.high.postProcessing = true;
+            set.low.sunScale = 1.1f; set.low.ambientScale = 1.06f; set.low.sunTint = new Color(1f, 0.98f, 0.94f);
+            set.medium.sunScale = set.high.sunScale = 1f; set.medium.ambientScale = set.high.ambientScale = 1f;
+            set.medium.sunTint = set.high.sunTint = Color.white;
+            set.low.extraSaturation = 0.2f; set.medium.extraSaturation = set.high.extraSaturation = 0f;
             EditorUtility.SetDirty(set);
             AssetDatabase.SaveAssets();
-            log.AppendLine("graphics tiers: Low 0.6 no real-time shadows, no HDR, no FXAA; Medium 0.85 shadows 25 m; High 1.0 soft shadows 50 m in 2 cascades");
+            log.AppendLine("graphics tiers: Low 0.6 no real-time shadows, no HDR, no FXAA, no colour grade (light lifted); Medium 0.85 shadows 25 m; High 1.0 soft shadows 50 m in 2 cascades");
             return set;
         }
 

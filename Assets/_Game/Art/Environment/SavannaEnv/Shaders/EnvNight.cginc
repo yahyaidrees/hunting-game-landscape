@@ -12,6 +12,20 @@ half _EnvNight;              // 0 = day, untouched .. 1 = full night
 half4 _EnvGrade;             // rgb = colour multiplier at night
 half4 _EnvGradeParams;       // x = desaturation, y = shadow deepening (blend toward c * c), z = backdrop haze, w = fog takes the sky colour
 float4 _EnvNear;             // x = brightness at the eye, y = 1 / distance (m) where it is back to full
+half _EnvLowSat;             // extra saturation on tiers drawn without the colour grade (Low): 0 = untouched, 0.2 = +20%
+
+// The graphics tiers that skip post-processing (Low) lose the grade's saturation: the ground, sky and backdrop take
+// it back here instead (QualityTierApplier sets _EnvLowSat). A uniform branch, skipped on the other tiers.
+half3 ENV_LowTierGrade(half3 c)
+{
+    UNITY_BRANCH
+    if (_EnvLowSat > 0)
+    {
+        half l = dot(c, half3(0.2126, 0.7152, 0.0722));
+        c = max(l + (c - l) * (1 + _EnvLowSat), 0);
+    }
+    return c;
+}
 
 // Night sky: a dark gradient from the horizon up, the moon disc, a tight halo and a wide glow spread sideways.
 float4 _EnvMoonDir;          // xyz = unit direction to the moon, w = disc radius (radians)
@@ -86,7 +100,7 @@ half3 ENV_MixFog(half3 col, half fogFactor, half3 nightFog)
 // Per pixel: URP fog toward the fog colour by day, toward the night sky in that direction at night.
 half3 ENV_ApplyFog(half3 col, float3 wpos)
 {
-    return ENV_MixFog(col, ENV_FogFactor(wpos), ENV_NightFog(wpos));
+    return ENV_LowTierGrade(ENV_MixFog(col, ENV_FogFactor(wpos), ENV_NightFog(wpos)));
 }
 
 // The night sky in a direction (any length), 0 by day. For reflections and backdrop haze, per vertex.
@@ -124,7 +138,7 @@ half3 ENV_GradeBackdrop(half3 c, float3 dir)
     UNITY_BRANCH
     if (_EnvNight > 0)
         g = lerp(g, ENV_NightSkyGlow(normalize(dir)), _EnvNight * _EnvGradeParams.z);
-    return g;
+    return ENV_LowTierGrade(g);
 }
 
 #endif
