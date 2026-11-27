@@ -39,7 +39,7 @@ namespace Game.Editor
         static readonly (SurfaceKind kind, Vector2 offset, Vector2 size)[] Patches =
         {
             (SurfaceKind.DryLeaves,    new Vector2(-8f,  3f), new Vector2(7f, 7f)),
-            (SurfaceKind.Rock,         new Vector2( 8f,  3f), new Vector2(6f, 6f)),
+            (SurfaceKind.Mud,          new Vector2( 8f,  5f), new Vector2(7f, 6f)),     // the goat pen's trampled yard (was a grey-box rock test patch)
             (SurfaceKind.Mud,          new Vector2(-6f, -7f), new Vector2(6f, 5f)),
             (SurfaceKind.ShallowWater, new Vector2( 6f, -7f), new Vector2(6f, 4f)),
             (SurfaceKind.Rock,         new Vector2(-16f, 12f), new Vector2(5f, 5f)),   // breaks the wolf trail: no prints
@@ -490,6 +490,7 @@ namespace Game.Editor
             BuildTrackingScene(root.transform, spawn, rot, tracking, log);
             BuildDressing(spawn, rot, log);   // trees, shrubs, flowers, mossy rocks: before cover, so they get cover too
             BuildDistance(log);               // far snowy range, ridges fading to blue, valley mist
+            BuildFarmstead(root.transform, spawn, rot, log);   // house, goat shelter, paddock, stone walls, hay, firewood
             SplitBackdrop(log);               // phones: solid parts of the backdrop drawn before the sky
             BakeScatterCover(root.transform, spawn + rot * new Vector3(-12f, 0f, 14f), EnsureCoverRules(surfaces, log), log);
             BuildAnimalScene(root.transform, spawn, rot, animals, log);

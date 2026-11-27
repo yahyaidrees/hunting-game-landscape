@@ -30,36 +30,12 @@ namespace Game.Editor
         static void BuildAttackScene(Transform root, Trail trail, Vector3 spawn, Quaternion rot, TrackingAssets a, StringBuilder log)
         {
             Vector3 W(Vector2 rel) => GroundPoint(spawn + rot * new Vector3(rel.x, 0f, rel.y));
-            var wood = LitMaterial("GB_PenWood", new Color(0.45f, 0.33f, 0.2f), log);
             var pen = new GameObject("GoatPen").transform;
             pen.SetParent(root, false);
             pen.SetPositionAndRotation(W(PenCentre), rot);
-
-            // posts at the corners and mid-sides, two rails on each side; the west side is broken open
-            for (int ix = -1; ix <= 1; ix++)
-            for (int iz = -1; iz <= 1; iz++)
-            {
-                if (ix == 0 && iz == 0) continue;
-                Vector3 p = new Vector3(ix * PenHalf, 0.55f, iz * PenHalf);
-                // a slight, fixed lean per post (no random: rebuilds give the same scene)
-                Primitive(PrimitiveType.Cube, pen, "Post", p, Quaternion.Euler(0f, (ix * 3 + iz) * 1.3f, (iz - ix) * 1.1f), new Vector3(0.12f, 1.1f, 0.12f), wood);
-            }
-            void Rail(Vector3 from, Vector3 to, float y, string name = "Rail")
-            {
-                Vector3 mid = (from + to) * 0.5f + Vector3.up * y;
-                Primitive(PrimitiveType.Cube, pen, name, mid, Quaternion.LookRotation(to - from), new Vector3(0.05f, 0.1f, (to - from).magnitude), wood);
-            }
+            farmMats = EnsureFarmMaterials(log);
+            BuildGoatPenTimber(pen, farmMats, log);   // natural timber (owner, 2026-11-27: the grey-box boards looked plain)
             float h = PenHalf;
-            foreach (float y in new[] { 0.4f, 0.85f })
-            {
-                Rail(new Vector3(-h, 0, h), new Vector3(h, 0, h), y);     // north
-                Rail(new Vector3(h, 0, -h), new Vector3(h, 0, h), y);     // east
-                Rail(new Vector3(-h, 0, -h), new Vector3(h, 0, -h), y);   // south
-                Rail(new Vector3(-h, 0, 0f), new Vector3(-h, 0, h), y);   // west, northern half intact
-            }
-            // west, southern half: torn out, one board on the ground, one hanging
-            Primitive(PrimitiveType.Cube, pen, "BrokenBoard", new Vector3(-h - 0.6f, 0.05f, -1.2f), Quaternion.Euler(0f, 70f, 90f), new Vector3(0.05f, 0.1f, 1.9f), wood);
-            Primitive(PrimitiveType.Cube, pen, "HangingBoard", new Vector3(-h, 0.55f, -0.45f), Quaternion.Euler(38f, 0f, 0f), new Vector3(0.05f, 0.1f, 1f), wood);
 
             // the signs: marks on the broken board, then the drag marks out of the gap toward the trail
             Vector3 board = pen.TransformPoint(new Vector3(-h - 0.5f, 0f, -1f));

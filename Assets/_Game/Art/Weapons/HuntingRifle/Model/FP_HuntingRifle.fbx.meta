@@ -489,17 +489,7 @@ ModelImporter:
   - first:
       137: 13700004
     second: HuntingRifle
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: HuntingRifle
-    second: {fileID: 2100000, guid: 1e13037fad480714a884cd7f7bd25235, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: HuntingRifle_Clip
-    second: {fileID: 2100000, guid: 7d04ae30483f1bf418eacf6542a44dee, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 0
     materialName: 0

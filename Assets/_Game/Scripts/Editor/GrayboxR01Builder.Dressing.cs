@@ -89,6 +89,22 @@ namespace Game.Editor
             data.name = "R01_ScatterData";
             var kinds = data.kinds.ToList();
             var cells = data.cells.ToList();
+            // the farm (house, shelter, field, walls, paddock) keeps the Alpine scene's own trees, rocks and grass out
+            for (int ci = 0; ci < cells.Count; ci++)
+            {
+                var c = cells[ci];
+                var k = data.kinds[c.kind];
+                float margin = k.detail || !k.mesh ? 0.3f : Mathf.Max(k.mesh.bounds.extents.x, k.mesh.bounds.extents.z) * 0.6f;
+                var keep = Enumerable.Range(0, c.positionScale.Length).Where(i =>
+                {
+                    var p = c.positionScale[i];
+                    Vector3 l = Quaternion.Inverse(rot) * (new Vector3(p.x, p.y, p.z) - spawn);
+                    return !InFarm(new Vector2(l.x, l.z), margin * p.w, k.detail);
+                }).ToArray();
+                if (keep.Length == c.positionScale.Length) continue;
+                cells[ci] = new FarmScatterData.Cell { kind = c.kind, bounds = c.bounds, positionScale = keep.Select(i => c.positionScale[i]).ToArray(), rotation = keep.Select(i => c.rotation[i]).ToArray() };
+            }
+            cells.RemoveAll(c => c.positionScale.Length == 0);
             int Kind(FarmScatterData.Kind k) { kinds.Add(k); return kinds.Count - 1; }
             DressRocks(kinds, log);   // on copies of the rock materials: the Alpine scene keeps its own
 
@@ -127,6 +143,7 @@ namespace Game.Editor
                 if ((r - WolfPath[WolfPath.Length - 1]).magnitude < 9f + clearance) return false;      // the kill site
                 foreach (var p in Patches) if (Mathf.Abs(r.x - p.offset.x) < p.size.x * 0.5f + 1.5f + clearance && Mathf.Abs(r.y - p.offset.y) < p.size.y * 0.5f + 1.5f + clearance) return false;
                 if (DistanceToPolyline(r, WolfPath) < (forTree ? 5f : 1.2f) + clearance) return false;   // never on the wolf's trail
+                if (InFarm(r, clearance + (forTree ? 3f : 0.5f), false)) return false;                // the farm
                 foreach (var path in HumanPaths) if (DistanceToPolyline(r, path) < 1.2f + clearance) return false;
                 return true;
             }
@@ -249,6 +266,20 @@ namespace Game.Editor
                     flowers++;
                 }
             }
+
+            // ---- the farm's wheat field: rows of the environment's own wheat tufts ----
+            int wheatKind = AlpineKinds("TuftWheat").FirstOrDefault();
+            int wheat = 0;
+            for (float z = -FieldHalf.y + 0.3f; z <= FieldHalf.y - 0.3f; z += 0.55f)
+            for (float x = -FieldHalf.x + 0.3f; x <= FieldHalf.x - 0.3f; x += 0.38f)
+            {
+                Vector2 rel = FieldCentre + new Vector2(x + R(-0.08f, 0.08f), z + R(-0.06f, 0.06f));
+                if (rng.NextDouble() < 0.06) continue;   // a few gaps, as a real field has
+                if (!Ground(spawn + rot * new Vector3(rel.x, 0f, rel.y), out var gp, out float gs) || gs > 25f) continue;
+                placed.Add((wheatKind, gp, R(0.85f, 1.2f), Quaternion.Euler(0f, R(0f, 360f), 0f)));
+                wheat++;
+            }
+            log.AppendLine($"dressing: wheat field of {wheat} tufts");
 
             // ---- cells: grouped by kind and by 40 m tiles (the renderer culls per cell) ----
             foreach (var group in placed.GroupBy(p => (p.kind, Mathf.FloorToInt(p.pos.x / 40f), Mathf.FloorToInt(p.pos.z / 40f))))

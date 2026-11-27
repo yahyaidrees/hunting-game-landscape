@@ -79,7 +79,14 @@ namespace Game.Editor
                 copy = new Material(source);
                 AssetDatabase.CreateAsset(copy, path);
             }
-            else if (copy != source) copy.CopyPropertiesFromMaterial(source);
+            else if (copy != source)
+            {
+                // Not CopyPropertiesFromMaterial: after it, the next SaveAssets wrote the copied state and dropped the
+                // split values set on top (2026-11-27: the mountain cards' solid copies lost their split this way)
+                var temp = new Material(source);
+                EditorUtility.CopySerialized(temp, copy);
+                Object.DestroyImmediate(temp);
+            }
             copy.name = System.IO.Path.GetFileNameWithoutExtension(path);
             return copy;
         }

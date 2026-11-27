@@ -33,6 +33,9 @@ namespace Game.Editor
         {
             new[] { new Vector2(0.8f, 3.6f), new Vector2(3f, 4.6f), new Vector2(4.7f, 5.4f) },
             new[] { new Vector2(-1.2f, 2.6f), new Vector2(-0.4f, -4f), new Vector2(0.6f, -12f), new Vector2(3.5f, -24f), new Vector2(8f, -38f), new Vector2(11f, -58f) },
+            // the farm: camp past the pen to the goat shelter and the farmhouse door, and down to the paddock gate
+            new[] { new Vector2(3.5f, 8.6f), new Vector2(9.5f, 9.8f), new Vector2(12f, 10.6f), new Vector2(16.5f, 11.6f), new Vector2(19.5f, 12.2f) },
+            new[] { new Vector2(10.5f, 3.2f), new Vector2(12.2f, -1f), new Vector2(13f, -5f), new Vector2(13.5f, -7.2f) },
         };
 
         static void BuildGroundLayers(Vector3 spawn, Quaternion rot, StringBuilder log)
@@ -71,6 +74,7 @@ namespace Game.Editor
                 PaintBlob(px, origin, World(p.offset), rot, p.size * 0.5f, channel, 0.8f, breakup);
             }
             foreach (var path in HumanPaths) PaintPath(px, origin, path.Select(World).ToArray(), 0.55f, 0);
+            PaintFarmGround(px, origin, World, rot);
 
             var tex = new Texture2D(LayerResolution, LayerResolution, TextureFormat.RGBA32, false, true);
             tex.SetPixels(px);
