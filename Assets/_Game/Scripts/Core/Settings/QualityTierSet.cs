@@ -29,6 +29,8 @@ namespace Game.Core.Settings
             public bool bloom = true;
             [Tooltip("FXAA edge smoothing on the game cameras. Off on Low: on a 720p phone it blurs more than it smooths (about 1.5 ms on a Mali-G71).")]
             public bool fxaa = true;
+            [Tooltip("Render scale while a cinematic plays (the kill camera), 0 = unchanged. The close-up wolf fills the screen with layered fur: on the Galaxy A30s it dipped to 25-28 fps at the Low scale. Slow motion hides the softer image.")]
+            [Range(0f, 1f)] public float cinematicRenderScale;
         }
 
         public Tier low = new Tier { frameRate = 30, textureMipLimit = 1, detailDensity = 0.3f, lodBias = 0.7f, bloom = false, fxaa = false };
@@ -50,12 +52,22 @@ namespace Game.Core.Settings
         /// the phone only then, because menus draw far less than the hunt. Set by the hunt session.
         /// </summary>
         public static bool MeasurementAllowed { get; set; }
+        /// <summary>A cinematic shot is playing (the kill camera): tiers may render it at a lower scale.</summary>
+        public static bool Cinematic { get; private set; }
+        public static event Action<bool> CinematicChanged;
+
+        public static void SetCinematic(bool on)
+        {
+            if (Cinematic == on) return;
+            Cinematic = on;
+            CinematicChanged?.Invoke(on);
+        }
         /// <summary>Raised after a tier is applied (also when only the frame rate changed).</summary>
         public static event Action<QualityTier> Applied;
 
         internal static void RaiseApplied() => Applied?.Invoke(Current);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { Applied = null; DetailDensity = -1f; HasApplied = false; Current = QualityTier.High; MeasurementAllowed = false; }
+        static void ResetStatics() { Applied = null; DetailDensity = -1f; HasApplied = false; Current = QualityTier.High; MeasurementAllowed = false; Cinematic = false; CinematicChanged = null; }
     }
 }

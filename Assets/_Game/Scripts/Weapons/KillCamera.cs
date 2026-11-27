@@ -175,6 +175,7 @@ namespace Game.Weapons
             bullet.gameObject.SetActive(true);
             trail.enabled = true;
             PlayingChanged?.Invoke(true);
+            Game.Core.Settings.QualityTiers.SetCinematic(true);   // the Low tier renders the close-up at a lower scale
         }
 
         void ApplyHit()
@@ -199,6 +200,7 @@ namespace Game.Weapons
             if (trail) trail.enabled = false;
             IsPlaying = false;
             PlayingChanged?.Invoke(false);
+            Game.Core.Settings.QualityTiers.SetCinematic(false);
         }
 
         // Side-on view of the impact, on whichever side has a clear line and stays above the ground.

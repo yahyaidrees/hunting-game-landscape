@@ -74,6 +74,8 @@ namespace Game.Editor
             set.medium.pipeline = Tier("Medium", 0.85f, true, 25f, 1, false, true);
             set.high.pipeline = Tier("High", 1f, true, 50f, 2, true, true);
             set.low.fxaa = false; set.medium.fxaa = true; set.high.fxaa = true;
+            // kill camera on Low: the close-up wolf dipped the Galaxy A30s to 25-28 fps (owner approved 2026-11-27)
+            set.low.cinematicRenderScale = 0.45f; set.medium.cinematicRenderScale = 0f; set.high.cinematicRenderScale = 0f;
             EditorUtility.SetDirty(set);
             AssetDatabase.SaveAssets();
             log.AppendLine("graphics tiers: Low 0.6 no real-time shadows, no HDR, no FXAA; Medium 0.85 shadows 25 m; High 1.0 soft shadows 50 m in 2 cascades");

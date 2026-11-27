@@ -12,7 +12,8 @@ namespace Game.Core.Settings
     /// </summary>
     public sealed class PerfProbe : MonoBehaviour
     {
-        const float WindowSeconds = 10f;
+        /// <summary>Seconds per logged sample (the test lab shortens it to catch brief moments such as the kill camera).</summary>
+        public static float WindowSeconds = 10f;
         readonly float[] frames = new float[2048];
         int count;
         float windowStart;

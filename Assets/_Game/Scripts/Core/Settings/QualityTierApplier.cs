@@ -53,10 +53,38 @@ namespace Game.Core.Settings
         void OnEnable()
         {
             GameSettings.Changed += Apply;
+            QualityTiers.CinematicChanged += OnCinematic;
             Apply();
         }
 
-        void OnDisable() => GameSettings.Changed -= Apply;
+        void OnDisable()
+        {
+            GameSettings.Changed -= Apply;
+            QualityTiers.CinematicChanged -= OnCinematic;
+            OnCinematic(false);   // never leave the asset at the cinematic scale (in the editor it would be saved)
+        }
+
+        // the tier's cinematic render scale while the kill camera plays, the normal one after
+        UniversalRenderPipelineAsset cinematicAsset;
+        float scaleBeforeCinematic = -1f;
+
+        void OnCinematic(bool on)
+        {
+            if (on)
+            {
+                var asset = QualitySettings.renderPipeline as UniversalRenderPipelineAsset;
+                if (!asset || applied == null || applied.cinematicRenderScale <= 0f || scaleBeforeCinematic >= 0f) return;
+                cinematicAsset = asset;
+                scaleBeforeCinematic = asset.renderScale;
+                asset.renderScale = Mathf.Min(asset.renderScale, applied.cinematicRenderScale);
+            }
+            else if (scaleBeforeCinematic >= 0f)
+            {
+                if (cinematicAsset) cinematicAsset.renderScale = scaleBeforeCinematic;
+                scaleBeforeCinematic = -1f;
+                cinematicAsset = null;
+            }
+        }
 
         /// <summary>Applies the current tier and frame rate again (after the calibrator lifted the cap to measure).</summary>
         public void Reapply()
