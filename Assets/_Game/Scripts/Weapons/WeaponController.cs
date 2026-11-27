@@ -74,6 +74,19 @@ namespace Game.Weapons
         public event Action<HitInfo> HitLanded;
         public KillCamera KillCamera => killCamera;
 
+        /// <summary>Takes up another weapon (from its kit): its handling, where it sits in the hands, a full magazine.</summary>
+        public void Equip(WeaponDefinition definition, Vector3 hip, Vector3 aim)
+        {
+            if (!definition) return;
+            weapon = definition;
+            hipPosition = hip;
+            aimPosition = aim;
+            Ammo = weapon.magazineSize;
+            breathLeft = weapon.holdBreathSeconds;
+            reloadDoneTime = -1f;
+            nextShotTime = 0f;
+        }
+
         void Awake()
         {
             if (!controller) controller = GetComponent<FirstPersonController>();

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55371d7af6de94949a695ab55e05c19d, type: 3}
+  m_Name: Kit_HuntingRifle
+  m_EditorClassIdentifier: Game.Weapons::Game.Weapons.WeaponKit
+  definition: {fileID: 11400000, guid: f622fab732b667f47b20fbb152161a2e, type: 2}
+  viewModel: {fileID: 1080426108438894341, guid: 921406e2f3c32ee44a5ecc48207afb64, type: 3}
+  animations: {fileID: 22100000, guid: fa548077e86b1d84b8f8b60c7be4b290, type: 2}
+  modelOffset: {x: 0.016, y: -1.602, z: 0.294}
+  hipPosition: {x: 0, y: 0, z: 0}
+  aimPosition: {x: 0, y: 0, z: 0.05}
+  muzzle: {x: 0.05, y: -0.03, z: 0.8}
+  motion:
+    breathLift: 0.0025
+    breathPitch: 0.35
+    breathRate: 0.22
+    drift: 0.25
+    bobSide: 0.011
+    bobDip: 0.009
+    bobRoll: 1.4
+    bobPitch: 0.7
+    walkOffset: {x: 0, y: -0.008, z: -0.012}
+    walkTilt: 2
+    strafeRoll: 3
+    runSpeed: 4.5
+    runOffset: {x: 0.02, y: -0.04, z: -0.05}
+    runRotation: {x: 10, y: -24, z: 14}
+    runBob: 1.9
+    lookSway: 0.9
+    lookSwayMax: 3.5
+    lookShift: 0.0012
+    crouchDip: 0.025
+    smoothing: 0.09
+    aimedMotion: 0.2

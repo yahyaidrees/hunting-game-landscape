@@ -47,6 +47,14 @@ namespace Game.Player
         public bool IsGrounded { get; private set; }
         /// <summary>Current speed as a fraction of standing walk speed (0..1).</summary>
         public float SpeedFraction { get; private set; }
+        /// <summary>Ground speed in metres per second.</summary>
+        public float Speed { get; private set; }
+        /// <summary>Stride phase in radians: grows by pi per step (the weapon bob follows it).</summary>
+        public float StepPhase => bobPhase;
+        /// <summary>Degrees turned this frame (x right, y up), after sensitivity: the weapon lags behind it.</summary>
+        public Vector2 LookDelta { get; private set; }
+        /// <summary>The move stick (x strafe, y forward).</summary>
+        public Vector2 MoveInput => input ? input.Move : Vector2.zero;
         public SurfaceDefinition CurrentSurface { get; private set; }
         public event Action<FootstepInfo> Footstep;
 
@@ -91,6 +99,7 @@ namespace Game.Player
             float perPixel = settings.dragDegreesPerScreenHeight / Mathf.Max(1, Screen.height);
             Vector2 delta = (input.LookDrag * perPixel + input.LookStick * (settings.stickDegreesPerSecond * dt)) * (LookScale * GameSettings.LookSensitivity);
             if (GameSettings.InvertLook) delta.y = -delta.y;
+            LookDelta = delta;
             yaw += delta.x;
             pitch = Mathf.Clamp(pitch - delta.y, settings.minPitch, settings.maxPitch);
             transform.rotation = Quaternion.Euler(0f, yaw, 0f);
@@ -145,7 +154,8 @@ namespace Game.Player
             Vector3 moved = transform.position - before;
             moved.y = 0f;
             float distance = moved.magnitude;
-            SpeedFraction = Mathf.Clamp01(distance / dt / settings.walkSpeed);
+            Speed = distance / dt;
+            SpeedFraction = Mathf.Clamp01(Speed / settings.walkSpeed);
 
             SampleSurface();
             AdvanceSteps(distance);

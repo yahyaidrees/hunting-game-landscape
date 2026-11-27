@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: FP_HuntingRifle
+  m_Controller: {fileID: 9100000, guid: 423af953e5ecc784393d3170e55dee43, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 5792124772508378872, guid: 423af953e5ecc784393d3170e55dee43, type: 2}
+    m_OverrideClip: {fileID: 7400012, guid: e0efe6b0fde0da8429698ac6f02ac775, type: 3}
+  - m_OriginalClip: {fileID: -2378496304556073620, guid: 423af953e5ecc784393d3170e55dee43, type: 2}
+    m_OverrideClip: {fileID: 7400014, guid: e0efe6b0fde0da8429698ac6f02ac775, type: 3}
+  - m_OriginalClip: {fileID: -7809183210717788053, guid: 423af953e5ecc784393d3170e55dee43, type: 2}
+    m_OverrideClip: {fileID: 7400004, guid: e0efe6b0fde0da8429698ac6f02ac775, type: 3}
+  - m_OriginalClip: {fileID: -819280617131724432, guid: 423af953e5ecc784393d3170e55dee43, type: 2}
+    m_OverrideClip: {fileID: 7400010, guid: e0efe6b0fde0da8429698ac6f02ac775, type: 3}
+  - m_OriginalClip: {fileID: 2096121786231552640, guid: 423af953e5ecc784393d3170e55dee43, type: 2}
+    m_OverrideClip: {fileID: 7400002, guid: e0efe6b0fde0da8429698ac6f02ac775, type: 3}

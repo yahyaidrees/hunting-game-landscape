@@ -202,19 +202,26 @@ namespace Game.Editor
             overlayData.renderShadows = false;
             cam.GetUniversalAdditionalCameraData().cameraStack.Add(overlay);
 
-            if (rifleAssets != null)
+            if (rifleKit != null)
             {
-                var real = BuildRifleViewModel(pivot.transform, rifleAssets, w.layer);
+                // the kit's model is mounted here ahead of time; WeaponViewModel.Equip swaps kits in play
+                var (holder, mount, animator) = BuildKitViewModel(pivot.transform, rifleKit, w.layer);
+                var fpc = root.GetComponent<FirstPersonController>();
                 var realWeapon = root.AddComponent<WeaponController>();
-                SetRefs(realWeapon, ("weapon", w.rifle), ("controller", root.GetComponent<FirstPersonController>()),
-                    ("input", root.GetComponent<PlayerInputReader>()), ("viewCamera", cam), ("weaponModel", real),
+                SetRefs(realWeapon, ("weapon", rifleKit.definition), ("controller", fpc),
+                    ("input", root.GetComponent<PlayerInputReader>()), ("viewCamera", cam), ("weaponModel", holder),
                     ("killCamera", AddKillCamera(root, cam, realWeapon, w)));
                 var wso = new SerializedObject(realWeapon);
-                wso.FindProperty("hipPosition").vector3Value = RifleHipPosition;
-                wso.FindProperty("aimPosition").vector3Value = RifleAimPosition;
+                wso.FindProperty("hipPosition").vector3Value = rifleKit.hipPosition;
+                wso.FindProperty("aimPosition").vector3Value = rifleKit.aimPosition;
                 wso.ApplyModifiedPropertiesWithoutUndo();
-                SetRefs(root.AddComponent<WeaponViewModel>(), ("weapon", realWeapon), ("animator", real.GetComponentInChildren<Animator>()));
-                AddWeaponFeedback(root, real, cam, realWeapon, w);
+                var motion = mount.gameObject.AddComponent<WeaponMotion>();
+                SetRefs(motion, ("controller", fpc), ("weapon", realWeapon));
+                motion.Settings = rifleKit.motion;
+                EditorUtility.SetDirty(motion);
+                var flash = AddWeaponFeedback(root, holder, cam, realWeapon, w, rifleKit.muzzle);
+                SetRefs(root.AddComponent<WeaponViewModel>(), ("weapon", realWeapon), ("kit", rifleKit), ("mount", mount),
+                    ("motion", motion), ("muzzleFlash", flash), ("animator", animator));
                 return;
             }
 
@@ -242,20 +249,20 @@ namespace Game.Editor
             SetRefs(weapon, ("weapon", w.rifle), ("controller", root.GetComponent<FirstPersonController>()),
                 ("input", root.GetComponent<PlayerInputReader>()), ("viewCamera", cam), ("weaponModel", rifle),
                 ("killCamera", AddKillCamera(root, cam, weapon, w)));
-            AddWeaponFeedback(root, rifle, cam, weapon, w);
+            AddWeaponFeedback(root, rifle, cam, weapon, w, new Vector3(0f, 0.005f, 0.72f));
         }
 
         // Shot, bolt, impacts and the mixer moves (sound), muzzle flash, dust, puffs and barrel smoke (sight).
-        static void AddWeaponFeedback(GameObject root, Transform rifle, Camera cam, WeaponController weapon, WeaponAssets w)
+        static Transform AddWeaponFeedback(GameObject root, Transform rifle, Camera cam, WeaponController weapon, WeaponAssets w, Vector3 muzzle)
         {
             var a = audioAssets;
-            if (a == null) return;
+            if (a == null) return null;
             // muzzle flash: a camera-facing star just past the barrel, on the first-person layer
             var flash = GameObject.CreatePrimitive(PrimitiveType.Quad);
             flash.name = "MuzzleFlash";
             Object.DestroyImmediate(flash.GetComponent<Collider>());
             flash.transform.SetParent(rifle, false);
-            flash.transform.localPosition = rifleAssets != null ? RifleMuzzle : new Vector3(0f, 0.005f, 0.72f);
+            flash.transform.localPosition = muzzle;
             flash.transform.localScale = Vector3.one * 0.14f;
             flash.layer = w.layer;
             var fr = flash.GetComponent<MeshRenderer>();
@@ -273,6 +280,7 @@ namespace Game.Editor
                 ("hitAnimal", a.hitAnimal), ("defaultImpact", a.defaultImpact), ("killCameraWhoosh", a.killCameraWhoosh),
                 ("muzzleFlash", flash), ("impactDust", a.impactDust), ("hitPuff", a.hitPuff),
                 ("barrelSmoke", smoke.GetComponent<ParticleSystem>()));
+            return flash.transform;
         }
 
         // Slow-motion kill camera rig: its own camera (sees the world, not the first-person rifle), a bullet and its air trail.

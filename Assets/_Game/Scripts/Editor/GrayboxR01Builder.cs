@@ -65,7 +65,7 @@ namespace Game.Editor
             var weapons = EnsureWeaponAssets(log);
             audioAssets = EnsureAudioAssets(surfaces, log);
             alarmAssets = EnsureAlarmAssets(log);
-            rifleAssets = EnsureRifleAssets(weapons.rifle, log);
+            rifleKit = EnsureRifleKit(weapons.rifle, log);
             var animals = EnsureAnimalAssets(weapons.blood, log);
             AssetDatabase.SaveAssets();
 
